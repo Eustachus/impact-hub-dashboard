@@ -29,8 +29,21 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ message: "User created", user }, { status: 201 });
-  } catch (error) {
-    console.error("Registration error:", error);
-    return NextResponse.json({ message: "An error occurred during registration" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Registration error details:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
+    
+    // Check for specific Prisma errors
+    if (error.code === 'P2002') {
+      return NextResponse.json({ message: "A user with this email already exists" }, { status: 400 });
+    }
+
+    return NextResponse.json({ 
+      message: "An error occurred during registration",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }, { status: 500 });
   }
 }
