@@ -1,0 +1,3 @@
+src/app/api/auth/register/route.ts(1,30): error TS2307: Cannot find module 'next/response' or its corresponding type declarations.
+src/app/layout.tsx(4,10): error TS2305: Module '"next/font/google"' has no exported member 'Geist'.
+src/lib/prisma.ts(1,10): error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.
