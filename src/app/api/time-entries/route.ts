@@ -8,8 +8,9 @@ export async function GET() {
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
+    const userId = (session.user as { id: string }).id;
     const entries = await prisma.timeEntry.findMany({
-      where: { userId: (session.user as any).id },
+      where: { userId },
       include: {
         task: { select: { title: true, project: { select: { name: true } } } }
       },
@@ -26,8 +27,7 @@ export async function GET() {
     }));
 
     return NextResponse.json(formatted);
-  } catch (error) {
-    console.error(error);
+  } catch {
     return NextResponse.json({ error: "Failed to fetch time entries" }, { status: 500 });
   }
 }

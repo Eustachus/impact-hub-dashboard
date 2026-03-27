@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Square, Timer, Save, RotateCcw } from "lucide-react";
+import { Play, Pause, Timer, Save, RotateCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface TaskTimerProps {
-  taskId: string;
   onTimeSave: (durationSeconds: number) => Promise<void>;
   initialDuration?: number; // Total seconds already logged
 }
 
-export function TaskTimer({ taskId, onTimeSave, initialDuration = 0 }: TaskTimerProps) {
+export function TaskTimer({ onTimeSave, initialDuration = 0 }: TaskTimerProps) {
   const [isRunning, setIsRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0); // Seconds in current session
   const [isSaving, setIsSaving] = useState(false);

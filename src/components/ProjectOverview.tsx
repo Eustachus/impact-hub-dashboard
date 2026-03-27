@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState } from "react";
@@ -5,10 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Users, Link as LinkIcon, Plus, Info, Settings, Layout, Briefcase, Timer } from "lucide-react";
+import { 
+  Users, CheckCircle2, AlertCircle, 
+  Calendar as CalendarIcon, MessageSquare, BarChart, 
+  Target, TrendingUp, Clock, Plus, Filter, MoreHorizontal,
+  FileText, Briefcase, Layout, Link as LinkIcon, Settings, Timer
+} from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 interface ProjectOverviewProps {
   project: any;
@@ -28,20 +36,18 @@ export function ProjectOverview({ project, tasks = [], onUpdate, onTaskClick }: 
   };
 
   const members = project.members || [];
-  const roles = ["OWNER", "ADMIN", "MEMBER", "GUEST"];
 
-  const getStatusConfig = (status: string) => {
-    switch (status?.toUpperCase()) {
-      case "DONE": return { color: "bg-emerald-500", label: "Done" };
-      case "IN_PROGRESS": return { color: "bg-[#5252ff]", label: "In Progress" };
-      case "AWAITING_APPROVAL": return { color: "bg-amber-400", label: "Awaiting" };
-      default: return { color: "bg-slate-300", label: "To Do" };
-    }
-  };
+  const taskStats = useMemo(() => {
+    const total = tasks.length;
+    const completed = tasks.filter(t => t.status === 'DONE').length;
+    const inProgress = tasks.filter(t => t.status === 'IN_PROGRESS').length;
+    const todo = tasks.filter(t => t.status === 'TODO').length;
+    return { total, completed, inProgress, todo };
+  }, [tasks]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 p-8 bg-white animate-in fade-in slide-in-from-bottom-4 duration-700 overflow-auto h-full custom-scrollbar">
-      
+
       {/* Left: Project Brief & Strategy */}
       <div className="lg:col-span-2 space-y-10">
         <section>

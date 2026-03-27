@@ -1,7 +1,7 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-export const Dialog = ({ open, onOpenChange, children }: { open?: boolean, onOpenChange?: (open: boolean) => void, children: React.ReactNode }) => {
+export const Dialog = ({ open, children }: { open?: boolean, onOpenChange?: (open: boolean) => void, children: React.ReactNode }) => {
   if (open === undefined) return <>{children}</>
   return open ? <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">{children}</div> : null
 }

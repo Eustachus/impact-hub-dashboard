@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export async function GET(
-  req: Request,
+  _: Request,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
@@ -35,8 +35,8 @@ export async function GET(
       orderBy: { order: "asc" }
     });
     return NextResponse.json(tasks);
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch tasks" }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Failed to fetch project tasks" }, { status: 500 });
   }
 }
 
@@ -58,7 +58,7 @@ export async function POST(
         status: status || "TODO",
         priority: priority || "NONE",
         projectId: params.id,
-        creatorId: (session.user as any).id,
+        creatorId: (session.user as { id: string }).id,
         sectionId: sectionId || null,
         startDate: startDate ? new Date(startDate) : null,
         dueDate: dueDate ? new Date(dueDate) : null,
@@ -74,15 +74,13 @@ export async function POST(
       }
     });
     return NextResponse.json(task);
-  } catch (error) {
-    console.error(error);
+  } catch {
     return NextResponse.json({ error: "Failed to create task" }, { status: 500 });
   }
 }
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
+  req: Request
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -117,9 +115,7 @@ export async function PATCH(
       }
     });
     return NextResponse.json(task);
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Failed to update task positions" }, { status: 500 });
   }
 }
-

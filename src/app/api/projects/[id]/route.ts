@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export async function GET(
-  req: Request,
+  _req: Request,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
@@ -31,13 +31,13 @@ export async function GET(
     });
     if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
     return NextResponse.json(project);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch project" }, { status: 500 });
   }
 }
 
 export async function PATCH(
-  req: Request,
+  _req: Request,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
@@ -56,7 +56,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Project not found or unauthorized" }, { status: 404 });
     }
 
-    const { name, description, brief, icon, status, color } = await req.json();
+    const { name, description, brief, icon, status, color } = await _req.json();
 
     const project = await prisma.project.update({
       where: { id: params.id },
@@ -71,13 +71,13 @@ export async function PATCH(
     });
 
     return NextResponse.json(project);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to update project" }, { status: 500 });
   }
 }
 
 export async function DELETE(
-  req: Request,
+  _req: Request,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
@@ -101,7 +101,7 @@ export async function DELETE(
     });
 
     return NextResponse.json({ message: "Project deleted successfully" });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
   }
 }

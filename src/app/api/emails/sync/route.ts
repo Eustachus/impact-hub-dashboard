@@ -3,13 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
-export async function POST(req: Request) {
+export async function POST() {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = (session.user as any).id;
+  const userId = (session.user as { id: string }).id;
 
   try {
     // 1. Find the user's Google Account
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     const messageIds = messagesData.messages || [];
 
     // 3. Fetch full details for each message
-    const emailPromises = messageIds.map(async (msg: any) => {
+    const emailPromises = messageIds.map(async (msg: { id: string }) => {
       const msgRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
     const savedEmails = [];
     for (const email of validMessages) {
       const headers = email.payload?.headers || [];
-      const getHeader = (name: string) => headers.find((h: any) => h.name.toLowerCase() === name.toLowerCase())?.value;
+      const getHeader = (name: string) => headers.find((h: { name: string; value: string }) => h.name.toLowerCase() === name.toLowerCase())?.value;
 
       const subject = getHeader("subject") || "No Subject";
       const from = getHeader("from") || "Unknown Sender";
@@ -99,19 +99,19 @@ export async function POST(req: Request) {
       message: "Emails synchronized successfully" 
     });
 
-  } catch (error: any) {
-    console.error("Email Sync Error:", error);
-    return NextResponse.json({ error: error.message || "Failed to sync emails" }, { status: 500 });
+  } catch (_error: unknown) {
+    console.error("Email sync error:", _error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
-export async function GET(req: Request) {
+export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = (session.user as any).id;
+  const userId = (session.user as { id: string }).id;
 
   try {
     const emails = await prisma.emailMessage.findMany({
@@ -121,7 +121,7 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(emails);
-  } catch (error: any) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch saved emails" }, { status: 500 });
   }
 }

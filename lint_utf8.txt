@@ -1,0 +1,1558 @@
+﻿
+> focus@0.1.0 lint
+> next lint
+
+node.exe : 
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (:String) [],    
+ RemoteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+./src/app/api/emails/sy
+nc/route.ts
+6:28  Error: '_req' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+12:35  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+108:27  Error: '_req' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+114:35  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+124:12  Error: 
+'_error' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+
+./src/app/api/projects/
+[id]/resources/route.ts
+20:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/app/api/projects/
+[id]/route.ts
+34:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+74:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+104:12  Error: 
+'_error' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+
+./src/app/api/projects/
+[id]/sections/route.ts
+20:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+50:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/app/api/projects/
+[id]/tasks/route.ts
+38:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+77:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+84:13  Error: 
+'_params' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+119:12  Error: 
+'_error' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+
+./src/app/api/tasks/rou
+te.ts
+24:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/app/api/tasks/[id
+]/comments/route.ts
+20:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+45:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/app/api/tasks/[id
+]/time-entries/route.ts
+41:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+94:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/app/api/time-entr
+ies/route.ts
+30:12  Error: '_error' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/app/dashboard/cal
+endar/page.tsx
+30:28  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+82:40  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+104:31  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/app/dashboard/fil
+es/page.tsx
+24:52  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+36:35  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+122:44  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+126:32  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+126:73  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+127:45  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+128:34  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+130:42  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+130:74  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+133:47  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+135:87  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/app/dashboard/goa
+ls/page.tsx
+25:28  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+62:20  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/app/dashboard/inb
+ox/page.tsx
+89:42  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+100:43  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+108:30  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+116:41  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+212:28  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+315:33  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/app/dashboard/my-
+tasks/page.tsx
+47:39  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+97:31  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/app/dashboard/pag
+e.tsx
+4:31  Error: 'useMemo' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+13:3  Error: 
+'DragOverlay' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+14:3  Error: 'defaultDr
+opAnimationSideEffects'
+ is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+20:3  Error: 'verticalL
+istSortingStrategy' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+64:32  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+129:33  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+198:131  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+245:77  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+248:50  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+249:44  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+253:80  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+254:94  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+257:90  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+259:87  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+268:47  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+282:33  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+297:90  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/app/dashboard/pro
+jects/page.tsx
+12:10  Error: 'Avatar' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+12:18  Error: 
+'AvatarFallback' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+12:34  Error: 
+'AvatarImage' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+16:17  Error: 
+'session' is assigned 
+a value but never 
+used.  @typescript-esli
+nt/no-unused-vars
+64:65  Error: `'` can 
+be escaped with 
+`&apos;`, `&lsquo;`, 
+`&#39;`, `&rsquo;`.  re
+act/no-unescaped-entiti
+es
+64:93  Error: `'` can 
+be escaped with 
+`&apos;`, `&lsquo;`, 
+`&#39;`, `&rsquo;`.  re
+act/no-unescaped-entiti
+es
+96:25  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+126:27  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/app/dashboard/pro
+jects/[id]/page.tsx
+28:50  Error: 'Info' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+28:56  Error: 'Users' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+28:63  Error: 
+'Settings' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+28:73  Error: 
+'Briefcase' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+29:27  Error: 
+'ChevronLeft' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+29:40  Error: 'Search' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+29:48  Error: 
+'CheckCircle2' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+29:62  Error: 
+'AlertCircle' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+30:3  Error: 'Check' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+30:10  Error: 'X' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+35:10  Error: 'Badge' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+37:8  Error: 'Link' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+46:15  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+124:26  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+124:41  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+184:42  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+187:10  Error: 
+'activeId' is assigned 
+a value but never 
+used.  @typescript-esli
+nt/no-unused-vars
+195:6  Warning: React 
+Hook useEffect has a 
+missing dependency: 
+'fetchBoardData'. 
+Either include it or 
+remove the dependency 
+array.  react-hooks/exh
+austive-deps
+212:70  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+212:88  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+213:85  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+213:103  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+214:70  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+214:88  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+218:36  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+222:41  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+235:44  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+244:27  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+402:9  Error: 
+'handleShare' is 
+assigned a value but 
+never used.  @typescrip
+t-eslint/no-unused-vars
+485:63  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+505:77  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+546:33  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/app/dashboard/set
+tings/page.tsx
+4:20  Error: 
+'useEffect' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+10:3  Error: 'Shield' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+11:3  Error: 'Zap' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+12:3  Error: 'Layout' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+13:3  Error: 'Globe' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+16:3  Error: 
+'ArrowRight' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+53:93  Error: `'` can 
+be escaped with 
+`&apos;`, `&lsquo;`, 
+`&#39;`, `&rsquo;`.  re
+act/no-unescaped-entiti
+es
+104:61  Error: `'` can 
+be escaped with 
+`&apos;`, `&lsquo;`, 
+`&#39;`, `&rsquo;`.  re
+act/no-unescaped-entiti
+es
+
+./src/app/dashboard/tim
+e-tracking/page.tsx
+8:10  Error: 'format' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+114:34  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+115:37  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+117:117  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+119:81  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+121:40  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+125:72  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/app/dashboard/tim
+eline/page.tsx
+28:35  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/Comman
+dPalette.tsx
+5:3  Error: 
+'Calculator' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+6:3  Error: 'Calendar' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+7:3  Error: 
+'CreditCard' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+8:3  Error: 'Settings' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+9:3  Error: 'Smile' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+10:3  Error: 'User' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+13:3  Error: 'Plus' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+14:3  Error: 
+'CheckCircle' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+15:3  Error: 
+'FileText' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+16:3  Error: 'Clock' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+17:3  Error: 'Target' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+27:48  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/Create
+TaskModal.tsx
+8:10  Error: 'Select' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+8:18  Error: 
+'SelectContent' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+8:33  Error: 
+'SelectItem' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+8:45  Error: 
+'SelectTrigger' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+8:60  Error: 
+'SelectValue' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+19:44  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+20:38  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+222:64  Error: `'` can 
+be escaped with 
+`&apos;`, `&lsquo;`, 
+`&#39;`, `&rsquo;`.  re
+act/no-unescaped-entiti
+es
+
+./src/components/home/A
+ssignedToOthersWidget.t
+sx
+7:10  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+8:23  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+34:49  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/home/G
+oalsOverviewWidget.tsx
+3:30  Error: 
+'CheckCircle2' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/components/home/H
+omeWidget.tsx
+5:38  Error: 
+'Minimize2' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+12:10  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+17:21  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/home/I
+mminentDeadlinesWidget.
+tsx
+4:10  Error: 'Badge' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+7:20  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+8:14  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+9:23  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/home/P
+rivateNotepadWidget.tsx
+4:10  Error: 
+'StickyNote' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/components/home/R
+ecentActivityWidget.tsx
+6:15  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+20:29  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/home/R
+ecentProjectsWidget.tsx
+4:10  Error: 'Folder' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+4:32  Error: 'Star' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+7:13  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/home/S
+tatsOverviewWidget.tsx
+7:10  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/home/U
+pcomingTasksWidget.tsx
+7:10  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+8:23  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/layout
+/sidebar.tsx
+6:37  Error: 
+'Briefcase' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+6:56  Error: 
+'Settings' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+95:44  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/Projec
+tCalendarView.tsx
+5:37  Error: 
+'MoreHorizontal' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+5:79  Error: 'Clock' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+5:86  Error: 
+'CheckCircle2' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+7:10  Error: 'Badge' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+8:10  Error: 
+'getTaskColor' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+12:10  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+13:23  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/Projec
+tGanttView.tsx
+3:37  Error: 
+'useEffect' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+6:5  Error: 'addDays' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+6:53  Error: 
+'endOfMonth' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+7:25  Error: 
+'startOfWeek' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+9:10  Error: 'Avatar' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+9:18  Error: 
+'AvatarFallback' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+9:34  Error: 
+'AvatarImage' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+12:5  Error: 
+'ChevronRight' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+12:19  Error: 
+'Calendar' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+12:29  Error: 'Filter' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+12:70  Error: 
+'ArrowRight' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+13:13  Error: 
+'LayoutList' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+13:38  Error: 
+'ListFilter' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+13:50  Error: 
+'Palette' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+13:59  Error: 
+'Settings' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+13:69  Error: 
+'ExternalLink' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+14:5  Error: 
+'Triangle' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+14:15  Error: 'Slack' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+14:22  Error: 'Mail' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+14:28  Error: 'Github' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+14:36  Error: 
+'MousePointer2' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+15:12  Error: 'Info' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+21:10  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+22:23  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+46:36  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+315:29  Warning: React 
+Hook useMemo has a 
+missing dependency: 
+'COLUMN_WIDTH'. Either 
+include it or remove 
+the dependency array.  
+react-hooks/exhaustive-
+deps
+
+./src/components/Projec
+tListView.tsx
+4:10  Error: 'Badge' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+6:10  Error: 'Clock' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+6:17  Error: 
+'MoreHorizontal' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+6:33  Error: 
+'ChevronRight' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+6:47  Error: 
+'CheckCircle2' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+6:61  Error: 
+'MessageSquare' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+6:76  Error: 
+'BarChart3' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+6:87  Error: 
+'Calculator' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+6:99  Error: 'Hash' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+11:10  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+12:23  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+19:72  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+104:74  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/Projec
+tOverview.tsx
+8:51  Error: 'Info' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+14:12  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+15:10  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+16:20  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+17:23  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+20:66  Error: 
+'onTaskClick' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+31:9  Error: 'roles' 
+is assigned a value 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+33:9  Error: 
+'getStatusConfig' is 
+assigned a value but 
+never used.  @typescrip
+t-eslint/no-unused-vars
+103:81  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+192:56  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+236:104  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+265:72  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+266:89  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+273:66  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+274:87  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+276:118  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/Projec
+tTimelineView.tsx
+3:10  Error: 'Avatar' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+3:18  Error: 
+'AvatarFallback' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+3:34  Error: 
+'AvatarImage' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+4:10  Error: 'Badge' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+5:10  Error: 'Clock' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+5:28  Error: 
+'ChevronRight' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+5:42  Error: 
+'AlertCircle' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+5:55  Error: 
+'Maximize2' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+5:66  Error: 
+'GitBranch' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+6:10  Error: 
+'getTaskColor' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+10:10  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+11:23  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/Projec
+tWorkflowView.tsx
+5:24  Error: 'Play' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+5:30  Error: 
+'Settings' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+5:40  Error: 
+'ChevronRight' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+6:18  Error: 'Github' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+6:32  Error: 
+'CheckCircle2' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+7:5  Error: 'Clock' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+20:11  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+171:37  Error: `"` can 
+be escaped with 
+`&quot;`, `&ldquo;`, 
+`&#34;`, `&rdquo;`.  re
+act/no-unescaped-entiti
+es
+171:121  Error: `"` 
+can be escaped with 
+`&quot;`, `&ldquo;`, 
+`&#34;`, `&rdquo;`.  re
+act/no-unescaped-entiti
+es
+
+./src/components/TaskDe
+tailModal.tsx
+2:33  Error: 
+'DialogHeader' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+2:47  Error: 
+'DialogTitle' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+23:19  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+27:74  Error: 
+'onUpdate' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+30:44  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+31:36  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+33:38  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+61:9  Error: 
+'handleAddSubtask' is 
+assigned a value but 
+never used.  @typescrip
+t-eslint/no-unused-vars
+72:35  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+73:14  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+80:9  Error: 
+'handleUpdateSubtask' 
+is assigned a value 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+80:61  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+89:30  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+89:53  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+92:14  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+99:40  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+131:36  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+203:37  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+203:72  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+238:102  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+261:83  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+270:38  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+285:31  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+285:55  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+288:150  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+288:176  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+288:215  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+297:55  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+297:79  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+355:34  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+405:10  Error: 
+'PlusIcon' is defined 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+405:26  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/TaskTi
+mer.tsx
+3:31  Error: 
+'useCallback' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+5:23  Error: 'Square' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+14:29  Error: 'taskId' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/components/ui/ava
+tar.tsx
+18:7  Warning: Using 
+`<img>` could result 
+in slower LCP and 
+higher bandwidth. 
+Consider using `<Image 
+/>` from `next/image` 
+to automatically 
+optimize images. This 
+may incur additional 
+usage or cost from 
+your provider. See: htt
+ps://nextjs.org/docs/me
+ssages/no-img-element  
+@next/next/no-img-eleme
+nt
+
+./src/components/ui/dia
+log.tsx
+4:32  Error: 
+'onOpenChange' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/components/ui/dro
+pdown-menu.tsx
+62:60  Error: 'align' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/components/ui/inp
+ut.tsx
+4:18  Error: An 
+interface declaring no 
+members is equivalent 
+to its supertype.  @typ
+escript-eslint/no-empty
+-object-type
+
+./src/lib/auth.ts
+10:37  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+71:26  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/lib/prisma.ts
+4:3  Error: Unexpected 
+var, use let or const 
+instead.  no-var
+
+info  - Need to 
+disable some ESLint 
+rules? Learn more 
+here: https://nextjs.or
+g/docs/basic-features/e
+slint#disabling-rules

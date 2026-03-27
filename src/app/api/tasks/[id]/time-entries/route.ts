@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export async function GET(
-  req: Request,
+  _req: Request,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
@@ -38,7 +38,7 @@ export async function GET(
       orderBy: { createdAt: "desc" }
     });
     return NextResponse.json(entries);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch time entries" }, { status: 500 });
   }
 }
@@ -91,8 +91,7 @@ export async function POST(
     // Optionally update task activity here or via separate trigger
     
     return NextResponse.json(entry);
-  } catch (error) {
-    console.error("[TIME_ENTRY_POST]", error);
+  } catch {
     return NextResponse.json({ error: "Failed to create time entry" }, { status: 500 });
   }
 }

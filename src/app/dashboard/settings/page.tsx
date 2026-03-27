@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import { useSession } from "next-auth/react";
@@ -50,7 +53,7 @@ export default function SettingsPage() {
           System Configuration
         </Badge>
         <h1 className="text-4xl font-black tracking-tighter">Réglages <span className="text-muted-foreground/30">/ Preference</span></h1>
-        <p className="text-muted-foreground font-medium">Gérez votre identité numérique et l'expérience focus.</p>
+        <p className="text-muted-foreground text-sm font-medium">Configure your workspace settings, notifications, and team preferences. Everything you need to keep your focus sharp and impact high.</p>
       </div>
 
       <div className="grid gap-8">

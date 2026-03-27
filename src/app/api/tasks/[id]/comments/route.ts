@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export async function GET(
-  req: Request,
+  _req: Request,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
@@ -17,8 +17,8 @@ export async function GET(
       orderBy: { createdAt: "asc" }
     });
     return NextResponse.json(comments);
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch comments" }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Failed to fetch task comments" }, { status: 500 });
   }
 }
 
@@ -37,13 +37,12 @@ export async function POST(
       data: {
         content,
         taskId: params.id,
-        userId: (session.user as any).id
+        userId: (session.user as { id: string }).id
       },
       include: { user: { select: { name: true, image: true } } }
     });
     return NextResponse.json(comment);
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Failed to post comment" }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Failed to create task comment" }, { status: 500 });
   }
 }

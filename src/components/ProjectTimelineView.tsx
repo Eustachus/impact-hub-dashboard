@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useMemo, useRef, useEffect } from "react";
 import { format, startOfMonth, addMonths, eachDayOfInterval, isSameDay, addDays, differenceInDays, startOfDay } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

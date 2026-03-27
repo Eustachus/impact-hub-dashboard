@@ -1,0 +1,116 @@
+﻿
+> focus@0.1.0 build
+> next build
+
+  Γû▓ Next.js 14.2.35
+  - Environments: .env
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+node.exe : 
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (:String) [],    
+ RemoteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+Failed to compile.
+
+./src/components/layout
+/sidebar.tsx
+95:44  Error: 
+Unexpected any. 
+Specify a different 
+type.  @typescript-esli
+nt/no-explicit-any
+
+./src/components/Projec
+tOverview.tsx
+9:51  Error: 'Info' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+21:66  Error: 
+'onTaskClick' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+32:9  Error: 'roles' 
+is assigned a value 
+but never used.  @types
+cript-eslint/no-unused-
+vars
+34:9  Error: 
+'getStatusConfig' is 
+assigned a value but 
+never used.  @typescrip
+t-eslint/no-unused-vars
+
+./src/components/TaskTi
+mer.tsx
+14:29  Error: 'taskId' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/components/ui/ava
+tar.tsx
+18:7  Warning: Using 
+`<img>` could result 
+in slower LCP and 
+higher bandwidth. 
+Consider using `<Image 
+/>` from `next/image` 
+to automatically 
+optimize images. This 
+may incur additional 
+usage or cost from 
+your provider. See: htt
+ps://nextjs.org/docs/me
+ssages/no-img-element  
+@next/next/no-img-eleme
+nt
+
+./src/components/ui/dia
+log.tsx
+4:32  Error: 
+'onOpenChange' is 
+defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/components/ui/dro
+pdown-menu.tsx
+63:60  Error: 'align' 
+is defined but never 
+used.  @typescript-esli
+nt/no-unused-vars
+
+./src/components/ui/inp
+ut.tsx
+4:18  Error: An 
+interface declaring no 
+members is equivalent 
+to its supertype.  @typ
+escript-eslint/no-empty
+-object-type
+
+info  - Need to 
+disable some ESLint 
+rules? Learn more 
+here: https://nextjs.or
+g/docs/basic-features/e
+slint#disabling-rules

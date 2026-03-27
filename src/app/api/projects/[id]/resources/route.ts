@@ -4,19 +4,20 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export async function GET(
-  req: Request,
+  _req: Request,
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const resources = await (prisma as any).projectResource.findMany({
       where: { projectId: params.id },
       orderBy: { createdAt: "desc" }
     });
     return NextResponse.json(resources);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch resources" }, { status: 500 });
   }
 }
@@ -34,6 +35,7 @@ export async function POST(
       return NextResponse.json({ error: "Title and URL are required" }, { status: 400 });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const project = await (prisma as any).project.update({
       where: { id: params.id },
       data: {
@@ -49,8 +51,8 @@ export async function POST(
     });
     
     return NextResponse.json(project.resources[project.resources.length - 1]);
-  } catch (error) {
-    console.error(error);
+  } catch (_error: unknown) {
+    console.error(_error);
     return NextResponse.json({ error: "Failed to create resource" }, { status: 500 });
   }
 }

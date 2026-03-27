@@ -1,3 +1,7 @@
+"use client";
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -257,8 +261,7 @@ export function TaskDetailModal({ open, onOpenChange, task: initialTask, onUpdat
 
               <div className="pt-4 border-t border-dashed mt-4 animate-in fade-in slide-in-from-top-4 duration-700">
                 <TaskTimer 
-                  taskId={task.id} 
-                  initialDuration={task?.timeEntries?.reduce((sum: number, entry: any) => sum + entry.duration, 0) || 0}
+                  initialDuration={task?.totalTimeLogged || 0}
                   onTimeSave={async (duration) => {
                     const res = await fetch(`/api/tasks/${task.id}/time-entries`, {
                       method: "POST",

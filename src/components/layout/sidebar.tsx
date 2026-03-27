@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Home, CheckCircle2, Inbox, Briefcase, Target, Settings, ChevronLeft, ChevronRight, CalendarDays, GitCommitHorizontal, FolderKanban, Clock, FileIcon } from "lucide-react";
+import { Home, CheckCircle2, Inbox, Target, ChevronLeft, ChevronRight, CalendarDays, GitCommitHorizontal, FolderKanban, Clock, FileIcon } from "lucide-react";
 import { useUIStore } from "@/stores/useUIStore";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";

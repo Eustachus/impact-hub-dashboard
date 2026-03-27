@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
@@ -59,7 +60,7 @@ export const DropdownMenuTrigger = ({ children }: { children: React.ReactNode })
 };
 
 
-export const DropdownMenuContent = ({ className, children, align, forceMount, ...props }: React.HTMLAttributes<HTMLDivElement> & { align?: string, forceMount?: boolean }) => {
+export const DropdownMenuContent = ({ className, children, forceMount, ...props }: React.HTMLAttributes<HTMLDivElement> & { align?: string, forceMount?: boolean }) => {
   const context = React.useContext(DropdownMenuContext);
   if (!context || (!context.open && !forceMount)) return null;
 

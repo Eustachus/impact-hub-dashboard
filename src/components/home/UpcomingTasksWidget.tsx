@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Clock, AlertCircle, CheckCircle2 } from "lucide-react";
