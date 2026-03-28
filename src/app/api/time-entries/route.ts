@@ -1,24 +1,35 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
-    const userId = (session.user as { id: string }).id;
-    const entries = await prisma.timeEntry.findMany({
-      where: { userId },
-      include: {
-        task: { select: { title: true, project: { select: { name: true } } } }
-      },
-      orderBy: { date: "desc" },
-      take: 10
-    });
+    const { data: entries, error: fetchError } = await supabase
+      .from('TimeEntry')
+      .select(`
+        id,
+        duration,
+        date,
+        task:Task (
+          title,
+          project:Project (
+            name
+          )
+        )
+      `)
+      .eq('userId', user.id)
+      .order('date', { ascending: false })
+      .limit(10);
 
-    const formatted = entries.map(e => ({
+    if (fetchError) throw fetchError;
+
+    const formatted = entries.map((e: any) => ({
       id: e.id,
       task: e.task?.title || "Tâche inconnue",
       project: e.task?.project?.name || "Projet inconnu",
@@ -27,7 +38,8 @@ export async function GET() {
     }));
 
     return NextResponse.json(formatted);
-  } catch {
+  } catch (error) {
+    console.error("Fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch time entries" }, { status: 500 });
   }
 }

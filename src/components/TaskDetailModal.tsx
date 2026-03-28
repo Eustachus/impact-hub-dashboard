@@ -46,11 +46,19 @@ export function TaskDetailModal({ open, onOpenChange, task: initialTask, onUpdat
   }, [open]);
 
   useEffect(() => {
-    if (open && initialTask) {
+    if (initialTask) {
+      setTask(initialTask);
+    }
+  }, [initialTask]);
+
+  useEffect(() => {
+    if (open && initialTask?.id) {
       fetch(`/api/tasks/${initialTask.id}`)
         .then(res => res.json())
         .then(data => {
-          setTask(data);
+          if (data && !data.error) {
+            setTask(data);
+          }
           // Also fetch comments
           return fetch(`/api/tasks/${initialTask.id}/comments`);
         })
@@ -58,7 +66,7 @@ export function TaskDetailModal({ open, onOpenChange, task: initialTask, onUpdat
         .then(data => data && setComments(data))
         .catch(err => console.error(err));
     }
-  }, [open, initialTask]);
+  }, [open, initialTask?.id]);
 
   if (!task) return null;
 
@@ -158,7 +166,7 @@ export function TaskDetailModal({ open, onOpenChange, task: initialTask, onUpdat
             )}
           </div>
           <div className="flex items-center gap-2 mr-6 text-xs text-muted-foreground uppercase font-bold tracking-tight">
-            ID: {task.id.slice(0, 8)}
+            ID: {task.id?.slice(0, 8) || '...'}
           </div>
         </div>
 

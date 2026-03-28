@@ -9,7 +9,8 @@ import { Bell, CheckCircle2, Check, Clock, Mail, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { TaskDetailModal } from "@/components/TaskDetailModal";
 import { Badge } from "@/components/ui/badge";
-import { signIn } from "next-auth/react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 type TabType = "ALL" | "UNREAD" | "MENTIONS" | "EMAILS";
 
@@ -22,39 +23,44 @@ interface Email {
 }
 
 export default function InboxPage() {
-  const [notifications, setNotifications] = useState<unknown[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const supabase = createClient();
+  const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifLoading, setNotifLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>("ALL");
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
-  const [selectedTask, setSelectedTask] = useState<unknown>(null);
-  const [emails, setEmails] = useState<unknown[]>([]);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [emails, setEmails] = useState<any[]>([]);
   const [emailStatus, setEmailStatus] = useState<"loading" | "disconnected" | "connected">("loading");
   const [isSyncing, setIsSyncing] = useState(false);
   
   const { socket } = useSocket();
 
   useEffect(() => {
+    // 1. Auth check
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/login");
+      } else {
+        setUser(user);
+        setAuthLoading(false);
+      }
+    };
+    checkUser();
+
+    // 2. Notifications
     fetch("/api/notifications")
       .then(res => res.json())
       .then(data => {
-        setNotifications(data);
+        if (Array.isArray(data)) setNotifications(data);
       })
       .catch(err => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => setNotifLoading(false));
 
-  useEffect(() => {
-    if (!socket) return;
-    socket.on("notification", (newNotification) => {
-      setNotifications(prev => [newNotification, ...prev]);
-    });
-    return () => {
-      socket.off("notification");
-    };
-  }, [socket]);
-
-  useEffect(() => {
-    // Load existing emails on mount
+    // 3. Emails
     fetch("/api/emails/sync")
       .then(res => {
         if (res.status === 403 || res.status === 401) {
@@ -69,8 +75,21 @@ export default function InboxPage() {
            setEmailStatus("connected");
         }
       })
-      .catch(err => console.error("Email fetch error:", err));
-  }, []);
+      .catch(err => {
+        console.error("Email fetch error:", err);
+        setEmailStatus("disconnected");
+      });
+  }, [router, supabase.auth]);
+
+  useEffect(() => {
+    if (!socket) return;
+    socket.on("notification", (newNotification) => {
+      setNotifications(prev => [newNotification, ...prev]);
+    });
+    return () => {
+      socket.off("notification");
+    };
+  }, [socket]);
 
   const syncEmails = async () => {
     setIsSyncing(true);
@@ -95,8 +114,23 @@ export default function InboxPage() {
     }
   };
 
+  const connectGoogle = async () => {
+    // In Supabase, we use signInWithOAuth to connect/link social accounts
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/dashboard/inbox',
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
+      }
+    });
+    if (error) console.error("Google connect error:", error);
+  };
+
   const markAllAsRead = () => {
-    setReadIds(new Set((notifications as any[]).map(n => n.id)));
+    setReadIds(new Set(notifications.map(n => n.id)));
   };
 
   const markAsRead = (id: string) => {
@@ -115,17 +149,17 @@ export default function InboxPage() {
   };
 
   const filteredNotifications = useMemo(() => {
-    return (notifications as any[]).filter(n => {
+    return notifications.filter(n => {
       const isRead = readIds.has(n.id);
       if (activeTab === "UNREAD" && isRead) return false;
-      if (activeTab === "MENTIONS" && !n.action.toLowerCase().includes("mention")) return false;
+      if (activeTab === "MENTIONS" && !n.action?.toLowerCase().includes("mention")) return false;
       return true;
     });
   }, [notifications, activeTab, readIds]);
 
-  const unreadCount = (notifications as any[]).filter(n => !readIds.has(n.id)).length;
+  const unreadCount = notifications.filter(n => !readIds.has(n.id)).length;
 
-  if (loading) {
+  if (authLoading || notifLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -209,7 +243,7 @@ export default function InboxPage() {
               <p className="text-muted-foreground max-w-[300px] leading-relaxed mb-6">
                 Authorize your Google Workspace account to read, triage, and convert emails into tasks directly from Focus.
               </p>
-              <Button onClick={() => signIn("google", { callbackUrl: "/dashboard/inbox" })} className="rounded-xl px-8 h-12 shadow-md shadow-primary/20 bg-blue-600 hover:bg-blue-700 text-white gap-3">
+              <Button onClick={connectGoogle} className="rounded-xl px-8 h-12 shadow-md shadow-primary/20 bg-blue-600 hover:bg-blue-700 text-white gap-3">
                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 48 48"><path fill="#fbc02d" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12	s5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24s8.955,20,20,20	s20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#e53935" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039	l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4caf50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36	c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1565c0" d="M43.611,20.083L43.595,20L42,20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571	c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg>
                  Connect Google Mail
               </Button>
@@ -219,20 +253,20 @@ export default function InboxPage() {
             <div className="p-16 text-center text-muted-foreground italic">Fetching your emails...</div>
           ) : emails.length > 0 ? (
             <div className="divide-y divide-white/5">
-               {(emails as unknown as Email[]).map((email) => (
+               {emails.map((email: any) => (
                  <div key={email.id} className="p-5 flex gap-4 transition-all cursor-pointer group hover:bg-muted/10 bg-blue-500/5 hover:bg-blue-500/10">
                     <Avatar className="h-10 w-10 shrink-0">
-                       <AvatarFallback className="bg-blue-500/20 text-blue-500 font-bold">{email.sender.charAt(0)}</AvatarFallback>
+                       <AvatarFallback className="bg-blue-500/20 text-blue-500 font-bold">{email.sender?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                        <div className="flex items-center justify-between">
-                         <span className="font-bold text-sm truncate pr-4">{email.sender.slice(0, Math.max(0, email.sender.indexOf('<'))) || email.sender}</span>
+                         <span className="font-bold text-sm truncate pr-4">{email.sender?.slice(0, Math.max(0, email.sender.indexOf('<'))) || email.sender}</span>
                          <span className="text-[10px] text-muted-foreground font-black uppercase tracking-wider shrink-0">
                            {new Date(email.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric'})}
                          </span>
                        </div>
                        <p className="text-[13px] font-semibold text-foreground/90 mt-0.5 truncate">{email.subject}</p>
-                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{email.snippet.replace(/&#39;/g, "'").replace(/&quot;/g, '"')}</p>
+                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{email.snippet?.replace(/&#39;/g, "'").replace(/&quot;/g, '"')}</p>
                     </div>
                  </div>
                ))}
@@ -261,7 +295,7 @@ export default function InboxPage() {
                   <Avatar className="h-12 w-12 border-2 border-background shadow-lg shadow-black/5">
                     <AvatarImage src={notif.userImage} />
                     <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary font-black text-lg">
-                      {notif.user.charAt(0)}
+                      {notif.user?.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   

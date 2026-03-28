@@ -25,10 +25,14 @@ export default function MyTasksPage() {
     fetch("/api/tasks")
       .then(res => res.json())
       .then(data => {
-        setTasks(data);
+        setTasks(Array.isArray(data) ? data : []);
         setLoading(false);
       })
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+        setTasks([]);
+        setLoading(false);
+      });
   }, []);
 
   if (loading) return <div className="p-8">Chargement de vos tâches...</div>;
@@ -46,7 +50,7 @@ export default function MyTasksPage() {
       </div>
 
       <div className="grid gap-4">
-        {tasks.length > 0 ? (tasks as any[]).map((task) => (
+        {Array.isArray(tasks) && tasks.length > 0 ? (tasks as any[]).map((task) => (
           <Card key={task.id} className="hover:shadow-md transition-shadow cursor-pointer group border-l-4 border-l-primary/50" onClick={() => setSelectedTask(task)}>
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-4 flex-1">
@@ -89,7 +93,9 @@ export default function MyTasksPage() {
         isOpen={isCreateOpen} 
         onClose={() => setIsCreateOpen(false)} 
         onTaskCreated={() => {
-          fetch("/api/tasks").then(res => res.json()).then(setTasks);
+          fetch("/api/tasks")
+            .then(res => res.json())
+            .then(data => setTasks(Array.isArray(data) ? data : []));
         }}
       />
 

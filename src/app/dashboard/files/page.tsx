@@ -29,14 +29,17 @@ export default function FilesPage() {
     fetch("/api/files")
       .then(res => res.json())
       .then(data => {
-        setFiles(data);
+        setFiles(Array.isArray(data) ? data : []);
       })
-      .catch(err => console.error(err))
+      .catch(err => {
+        console.error(err);
+        setFiles([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  const filteredFiles = (files as any[]).filter(f => 
-    f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredFiles = (Array.isArray(files) ? files : []).filter((f: any) => 
+    f.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     f.taskTitle?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -79,7 +82,7 @@ export default function FilesPage() {
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {filteredFiles.map((file) => (
+        {filteredFiles.map((file: any) => (
           <Card key={file.id} className="group overflow-hidden border bg-card/50 hover:bg-card hover:shadow-md transition-all cursor-pointer" onClick={() => setSelectedFile(file)}>
             <CardContent className="p-0">
               <div className="h-32 bg-muted/30 flex items-center justify-center relative">

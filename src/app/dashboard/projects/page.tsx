@@ -4,44 +4,55 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { CopyPlus, MoreHorizontal, LayoutGrid, List as ListIcon, FolderIcon, CheckCircle } from "lucide-react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 export default function ProjectsPage() {
-  const { data: _session } = useSession({
-    required: true,
-    onUnauthenticated() {
-      redirect("/login");
-    },
-  });
+  const router = useRouter();
+  const supabase = createClient();
+  const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [projects, setProjects] = useState<unknown[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
   const [newProject, setNewProject] = useState({ name: "", description: "", color: "#3b82f6" });
 
   useEffect(() => {
+    // 1. Auth check
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/login");
+      } else {
+        setUser(user);
+        setAuthLoading(false);
+      }
+    };
+    checkUser();
+
     fetchProjects();
-  }, []);
+  }, [router, supabase.auth]);
 
   const fetchProjects = async () => {
     try {
       const res = await fetch("/api/projects");
       const data = await res.json();
-      if (Array.isArray(data)) setProjects(data);
+      setProjects(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
+      setProjects([]);
     } finally {
-      setLoading(false);
+      setDataLoading(false);
     }
   };
 
@@ -63,7 +74,16 @@ export default function ProjectsPage() {
     }
   };
 
-  if (loading) return <div className="p-8">Chargement des projets...</div>;
+  if (authLoading || dataLoading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+           <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+           <p className="text-xs font-black uppercase tracking-[0.2em] opacity-40 animate-pulse">Chargement des projets...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -87,14 +107,14 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      {projects.length === 0 ? (
+      {(!Array.isArray(projects) || projects.length === 0) ? (
         <div className="border-2 border-dashed rounded-xl p-12 text-center space-y-4">
           <div className="bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mx-auto text-primary">
             <FolderIcon className="h-6 w-6" />
           </div>
           <div className="space-y-1">
             <h3 className="font-semibold text-lg">Aucun projet trouvé</h3>
-                    <p className="text-muted-foreground text-sm flex items-center gap-2">You haven&apos;t started any projects yet. Let&apos;s build something impactful.</p>
+            <p className="text-muted-foreground text-sm">Vous n'avez pas encore commencé de projet. Créons quelque chose d'impactant.</p>
           </div>
           <Button onClick={() => setIsCreateModalOpen(true)} variant="outline">
             Créer un projet
@@ -102,7 +122,7 @@ export default function ProjectsPage() {
         </div>
       ) : view === "grid" ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {(projects as any[]).map((p) => (
+          {Array.isArray(projects) && projects.map((p) => (
             <Link key={p.id} href={`/dashboard/projects/${p.id}`}>
               <Card className="hover:shadow-md transition-shadow flex flex-col h-full cursor-pointer overflow-hidden group border-t-4" style={{ borderTopColor: p.color }}>
                 <CardHeader className="pb-3 flex-row items-start justify-between space-y-0">
@@ -132,7 +152,7 @@ export default function ProjectsPage() {
       ) : (
         <div className="rounded-md border bg-card overflow-hidden">
           <div className="divide-y">
-            {(projects as any[]).map((p) => (
+            {Array.isArray(projects) && projects.map((p) => (
               <Link key={p.id} href={`/dashboard/projects/${p.id}`}>
                 <div className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">

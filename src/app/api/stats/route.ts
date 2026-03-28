@@ -1,69 +1,56 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
-    const userId = (session.user as { id: string }).id;
-    
-    // Scoping to ensure user can only see stats for their own workspaces, creations, or assignments
-    const hasAccessToTask = {
-      OR: [
-        { creatorId: userId },
-        { assignees: { some: { userId } } },
-        { project: { workspace: { members: { some: { userId } } } } }
-      ]
-    };
+    // 1. Get organization IDs where the user is a member
+    const { data: memberships } = await supabase
+      .from('Membership')
+      .select('organizationId')
+      .eq('userId', user.id);
+    const organizationIds = memberships?.map(m => m.organizationId) || [];
 
-    const hasAccessToProject = {
-      workspace: { members: { some: { userId } } }
-    };
+    if (organizationIds.length === 0) {
+      return NextResponse.json({
+        totalTasks: 0,
+        completedTasks: 0,
+        inProgressTasks: 0,
+        totalProjects: 0,
+        projectProgress: [],
+        upcomingDeadlines: [],
+        recentActivity: []
+      });
+    }
 
-    const [totalTasks, completedTasks, inProgressTasks, totalProjects, recentTasks, projectsWithStats, upcomingDeadlines] = await Promise.all([
-      prisma.task.count({ where: hasAccessToTask }),
-      prisma.task.count({ where: { status: "DONE", ...hasAccessToTask } }),
-      prisma.task.count({ where: { status: "IN_PROGRESS", ...hasAccessToTask } }),
-      prisma.project.count({ where: hasAccessToProject }),
-      prisma.task.findMany({
-        where: hasAccessToTask,
-        take: 5,
-        orderBy: { updatedAt: "desc" },
-        include: { project: true }
-      }),
-      prisma.project.findMany({
-        where: hasAccessToProject,
-        include: {
-          _count: {
-            select: { tasks: true }
-          },
-          tasks: {
-            where: { status: "DONE" },
-            select: { id: true }
-          }
-        }
-      }),
-      prisma.task.findMany({
-        where: {
-          ...hasAccessToTask,
-          status: { not: "DONE" },
-          dueDate: {
-            not: null,
-            lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Next 7 days
-          }
-        },
-        take: 5,
-        orderBy: { dueDate: "asc" },
-        include: { project: true }
-      })
+    // 2. Aggregate stats
+    const [
+      { count: totalTasks },
+      { count: completedTasks },
+      { count: inProgressTasks },
+      { count: totalProjects },
+      { data: recentTasks },
+      { data: projectsWithStats },
+      { data: upcomingDeadlines }
+    ] = await Promise.all([
+      supabase.from('Task').select('id', { count: 'exact', head: true }).in('organizationId', organizationIds),
+      supabase.from('Task').select('id', { count: 'exact', head: true }).eq('status', 'DONE').in('organizationId', organizationIds),
+      supabase.from('Task').select('id', { count: 'exact', head: true }).eq('status', 'IN_PROGRESS').in('organizationId', organizationIds),
+      supabase.from('Project').select('id', { count: 'exact', head: true }).in('organizationId', organizationIds),
+      supabase.from('Task').select('*, project:Project!inner(*)').in('organizationId', organizationIds).order('updatedAt', { ascending: false }).limit(5),
+      supabase.from('Project').select('*, tasks:Task(status)').in('organizationId', organizationIds),
+      supabase.from('Task').select('*, project:Project!inner(*)').in('organizationId', organizationIds).neq('status', 'DONE').not('dueDate', 'is', null).lte('dueDate', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()).order('dueDate', { ascending: true }).limit(5)
     ]);
 
-    const projectProgress = projectsWithStats.map(p => {
-      const total = p._count.tasks;
-      const completed = p.tasks.length;
+    const projectProgress = (projectsWithStats || []).map(p => {
+      const total = p.tasks?.length || 0;
+      const completed = p.tasks?.filter((t: any) => t.status === "DONE").length || 0;
       return {
         id: p.id,
         name: p.name,
@@ -75,13 +62,13 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      totalTasks,
-      completedTasks,
-      inProgressTasks,
-      totalProjects,
+      totalTasks: totalTasks || 0,
+      completedTasks: completedTasks || 0,
+      inProgressTasks: inProgressTasks || 0,
+      totalProjects: totalProjects || 0,
       projectProgress,
-      upcomingDeadlines,
-      recentActivity: recentTasks.map(t => ({
+      upcomingDeadlines: upcomingDeadlines || [],
+      recentActivity: (recentTasks || []).map((t: any) => ({
         id: t.id,
         user: "Vous",
         action: t.createdAt === t.updatedAt ? "a créé" : "a mis à jour",
@@ -91,7 +78,7 @@ export async function GET() {
       }))
     });
   } catch (error) {
-    console.error(error);
+    console.error("Fetch Stats Error:", error);
     return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
   }
 }

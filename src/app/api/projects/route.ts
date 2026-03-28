@@ -1,69 +1,109 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
-    const projects = await prisma.project.findMany({
-      where: {
-        workspace: {
-          members: {
-            some: { userId: (session.user as { id: string }).id }
-          }
-        }
-      },
-      include: {
-        _count: {
-          select: { tasks: true }
-        }
-      },
-      orderBy: { updatedAt: "desc" }
-    });
-    return NextResponse.json(projects);
-  } catch {
+    // 1. Get organization IDs where the user is a member
+    const { data: memberships, error: memberError } = await supabase
+      .from('Membership')
+      .select('organizationId')
+      .eq('userId', user.id);
+
+    if (memberError) throw memberError;
+    const organizationIds = memberships.map(m => m.organizationId);
+
+    if (organizationIds.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    // 2. Fetch projects for these organizations with task counts
+    const { data: projects, error: projectError } = await supabase
+      .from('Project')
+      .select('*, tasks:Task(count)')
+      .in('organizationId', organizationIds)
+      .order('updatedAt', { ascending: false });
+
+    if (projectError) throw projectError;
+
+    // Format to match original output (_count)
+    const formatted = projects.map(p => ({
+      ...p,
+      _count: {
+        tasks: p.tasks?.[0]?.count || 0
+      }
+    }));
+
+    return NextResponse.json(formatted);
+  } catch (error) {
+    console.error("Fetch Projects Error:", error);
     return NextResponse.json({ error: "Failed to fetch projects" }, { status: 500 });
   }
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
     const { name, description, color } = await req.json();
     
-    // 1. Find ANY workspace for this user
-    let workspace = await prisma.workspace.findFirst({
-      where: {
-        members: { some: { userId: (session.user as { id: string }).id } }
-      }
-    });
+    // 1. Find ANY organization for this user
+    const { data: memberships, error: memberError } = await supabase
+      .from('Membership')
+      .select('organizationId')
+      .eq('userId', user.id)
+      .limit(1);
 
-    // 2. If no workspace, create a default one
-    if (!workspace) {
-      workspace = await prisma.workspace.create({
-        data: {
-          name: "Mon Espace",
-          members: {
-            create: { userId: (session.user as { id: string }).id, role: "ADMIN" }
-          }
-        }
-      });
+    if (memberError) throw memberError;
+
+    let organizationId;
+
+    // 2. If no organization, create a default one
+    if (memberships.length === 0) {
+      const { data: newOrg, error: orgError } = await supabase
+        .from('Organization')
+        .insert({ name: "Mon Espace", slug: `org-${Date.now()}` })
+        .select()
+        .single();
+
+      if (orgError) throw orgError;
+      organizationId = newOrg.id;
+
+      const { error: memberCreateError } = await supabase
+        .from('Membership')
+        .insert({ userId: user.id, organizationId, role: "ADMIN" });
+
+      if (memberCreateError) throw memberCreateError;
+    } else {
+      organizationId = memberships[0].organizationId;
     }
 
     // 3. Create project
-    const project = await prisma.project.create({
-      data: {
+    const { data: project, error: projectCreateError } = await supabase
+      .from('Project')
+      .insert({
         name,
         description,
         color,
-        workspaceId: workspace.id,
-      }
-    });
+        organizationId,
+        createdBy: user.id,
+      })
+      .select()
+      .single();
+
+    if (projectCreateError) throw projectCreateError;
+    
     return NextResponse.json(project);
   } catch (error) {
     console.error("Project Creation Error:", error);

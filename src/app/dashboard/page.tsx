@@ -2,9 +2,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { 
   DndContext, 
   closestCenter, 
@@ -46,6 +45,7 @@ import { ImminentDeadlinesWidget } from "@/components/home/ImminentDeadlinesWidg
 import { TaskDetailModal } from "@/components/TaskDetailModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { createClient } from "@/lib/supabase/client";
 
 const DEFAULT_WIDGETS = [
   { id: "stats", title: "Overview", subtitle: "Key Metrics", icon: "Zap", size: "col-span-1 border-primary/20" },
@@ -80,21 +80,18 @@ const BACKGROUNDS = [
 ];
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession({
-    required: true,
-    onUnauthenticated() {
-      redirect("/login");
-    },
-  });
-
-  const [stats, setStats] = useState<unknown>(null);
-  const [tasks, setTasks] = useState<unknown[]>([]);
-  const [projects, setProjects] = useState<unknown[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const supabase = createClient();
+  const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [stats, setStats] = useState<any>(null);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [activeBackground, setActiveBackground] = useState("minimal");
   const [widgets, setWidgets] = useState(DEFAULT_WIDGETS);
-  const [selectedTask, setSelectedTask] = useState<unknown>(null);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -102,32 +99,46 @@ export default function DashboardPage() {
   );
 
   useEffect(() => {
-    // Load preferences
+    // 1. Auth check
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/login");
+      } else {
+        setUser(user);
+        setAuthLoading(false);
+      }
+    };
+    checkUser();
+
+    // 2. Load preferences
     const savedBg = localStorage.getItem("focus_home_bg");
     if (savedBg) setActiveBackground(savedBg);
     
     const savedWidgets = localStorage.getItem("focus_home_widgets");
     if (savedWidgets) setWidgets(JSON.parse(savedWidgets));
 
-    // Fetch data
+    // 3. Fetch data
     Promise.all([
       fetch("/api/stats").then(res => res.json()),
       fetch("/api/tasks").then(res => res.json()),
       fetch("/api/projects").then(res => res.json()),
     ]).then(([statsData, tasksData, projectsData]) => {
       setStats(statsData);
-      setTasks(tasksData);
-      setProjects(projectsData);
+      setTasks(Array.isArray(tasksData) ? tasksData : []);
+      setProjects(Array.isArray(projectsData) ? projectsData : []);
     }).catch(err => {
       console.error("Dashboard initialization error:", err);
+      setTasks([]);
+      setProjects([]);
     }).finally(() => {
-      setLoading(false);
+      setDataLoading(false);
     });
-  }, []);
+  }, [router, supabase.auth]);
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
-    if (active.id !== over.id) {
+    if (active && over && active.id !== over.id) {
       setWidgets((items) => {
         const oldIndex = items.findIndex(i => i.id === active.id);
         const newIndex = items.findIndex(i => i.id === over.id);
@@ -167,7 +178,7 @@ export default function DashboardPage() {
     });
   };
 
-  if (status === "loading" || loading) {
+  if (authLoading || dataLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -179,6 +190,7 @@ export default function DashboardPage() {
   }
 
   const bgClass = BACKGROUNDS.find(b => b.id === activeBackground)?.class || "bg-background";
+  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0];
 
   return (
     <div className={`-m-8 min-h-screen transition-all duration-1000 ease-in-out p-8 ${bgClass} font-sans`}>
@@ -191,10 +203,10 @@ export default function DashboardPage() {
               Impact Dashboard
             </Badge>
             <h1 className="text-5xl font-black tracking-tighter text-foreground drop-shadow-sm">
-              {new Date().getHours() < 12 ? "Good morning," : "Hello,"} <span className="text-primary">{session?.user?.name?.split(' ')[0]}</span>.
+              {new Date().getHours() < 12 ? "Bonjour," : "Bonsoir,"} <span className="text-primary">{firstName}</span>.
             </h1>
-            <p className="text-muted-foreground font-medium text-lg leading-none pt-1">
-              You drive {projects.length} social initiatives. {(tasks as unknown[]).filter((t: any) => t.status !== 'DONE').length} tasks need your attention.
+            <p className="text-muted-foreground font-medium text-lg pt-1">
+              Vous pilotez {(Array.isArray(projects) ? projects.length : 0)} initiatives sociales. {(Array.isArray(tasks) ? tasks.filter((t: any) => t.status !== 'DONE').length : 0)} tâches requièrent votre attention.
             </p>
           </div>
 
@@ -267,7 +279,7 @@ export default function DashboardPage() {
         {widgets.length < (DEFAULT_WIDGETS as any[]).length && isEditMode && (
           <div className="flex justify-center pt-8 border-t border-white/5">
              <Button variant="outline" className="rounded-full border-dashed gap-2 opacity-60 hover:opacity-100" onClick={resetWidgets}>
-                <Plus className="h-4 w-4" /> Restore Default Widgets
+                <Plus className="h-4 w-4" /> Restaurer les widgets par défaut
              </Button>
           </div>
         )}
@@ -281,7 +293,9 @@ export default function DashboardPage() {
           task={selectedTask as any}
           onUpdate={() => {
              // Refresh tasks after update
-             fetch("/api/tasks").then(res => res.json()).then(setTasks);
+             fetch("/api/tasks").then(res => res.json()).then(data => {
+               setTasks(Array.isArray(data) ? data : []);
+             });
           }}
         />
       )}

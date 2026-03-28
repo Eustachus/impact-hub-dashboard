@@ -1,23 +1,25 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sections = await (prisma as any).section.findMany({
-      where: { projectId: params.id },
-      orderBy: { order: "asc" }
-    });
+    const { data: sections, error } = await supabase
+      .from('Section')
+      .select('*')
+      .eq('projectId', params.id)
+      .order('order', { ascending: true });
+
+    if (error) throw error;
     return NextResponse.json(sections);
-  } catch {
+  } catch (error: any) {
+    console.error("Sections fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch sections" }, { status: 500 });
   }
 }
@@ -26,28 +28,29 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const { name, order } = await req.json();
     if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
 
-    const project = await prisma.project.update({
-      where: { id: params.id },
-      data: {
-        sections: {
-          create: {
-            name,
-            order: order || 0,
-          }
-        }
-      },
-      include: { sections: true }
-    });
+    const { data: section, error: insertError } = await supabase
+      .from('Section')
+      .insert({
+        name,
+        order: order || 0,
+        projectId: params.id
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
     
-    return NextResponse.json(project.sections[project.sections.length - 1]);
-  } catch {
+    return NextResponse.json(section);
+  } catch (error: any) {
+    console.error("Section creation error:", error);
     return NextResponse.json({ error: "Failed to create section" }, { status: 500 });
   }
 }

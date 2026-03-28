@@ -1,24 +1,32 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
-    const goals = await prisma.goal.findMany({
-      include: {
-        keyResults: true,
-        owner: { select: { name: true } }
-      },
-      orderBy: { createdAt: "desc" }
-    });
+    const { data: goals, error: fetchError } = await supabase
+      .from('Goal')
+      .select(`
+        id,
+        title,
+        status,
+        keyResults:KeyResult (*),
+        owner:User ( name )
+      `)
+      .order('createdAt', { ascending: false });
 
-    const formattedGoals = goals.map(g => {
-      const avgProgress = g.keyResults.length > 0 
-        ? g.keyResults.reduce((acc, kr) => acc + (kr.currentValue / kr.targetValue), 0) / g.keyResults.length
+    if (fetchError) throw fetchError;
+
+    const formattedGoals = (goals || []).map((g: any) => {
+      const keyResults = g.keyResults || [];
+      const avgProgress = keyResults.length > 0 
+        ? keyResults.reduce((acc: number, kr: any) => acc + (kr.currentValue / kr.targetValue), 0) / keyResults.length
         : 0;
 
       return {
@@ -33,7 +41,7 @@ export async function GET() {
 
     return NextResponse.json(formattedGoals);
   } catch (error) {
-    console.error(error);
+    console.error("Fetch Goals Error:", error);
     return NextResponse.json({ error: "Failed to fetch goals" }, { status: 500 });
   }
 }

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
   try {
@@ -10,39 +9,57 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const supabase = createClient();
 
-    if (existingUser) {
-      return NextResponse.json({ message: "User already exists" }, { status: 400 });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
+    // 1. Sign up user in Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name,
+        },
       },
     });
 
-    return NextResponse.json({ message: "User created", user }, { status: 201 });
-  } catch (error: any) {
-    console.error("Registration error details:", {
-      message: error.message,
-      stack: error.stack,
-      code: error.code
-    });
-    
-    // Check for specific Prisma errors
-    if (error.code === 'P2002') {
-      return NextResponse.json({ message: "A user with this email already exists" }, { status: 400 });
+    if (authError) {
+      return NextResponse.json({ message: authError.message }, { status: authError.status || 400 });
+    }
+
+    if (!authData.user) {
+      return NextResponse.json({ message: "Failed to create auth user" }, { status: 500 });
+    }
+
+    // 2. Sync user to custom 'User' table via Supabase client
+    // We use the Supabase Auth UUID as the internal User ID
+    const { error: dbError } = await supabase
+      .from('User')
+      .insert({
+        id: authData.user.id,
+        name,
+        email,
+      });
+
+    if (dbError) {
+      console.error("DB Sync error:", dbError);
+      // We don't necessarily fail the whole request because the auth user is created,
+      // but it's good to log and handle.
     }
 
     return NextResponse.json({ 
-      message: "An error occurred during registration",
+      message: "User registered successfully", 
+      user: {
+        id: authData.user.id,
+        email,
+        name
+      }
+    }, { status: 201 });
+
+  } catch (error: any) {
+    console.error("Registration error:", error);
+    
+    return NextResponse.json({ 
+      message: "An unexpected error occurred during registration",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     }, { status: 500 });
   }

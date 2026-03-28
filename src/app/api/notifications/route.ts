@@ -1,38 +1,53 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
-    const notifications = await prisma.activityLog.findMany({
-      where: {
-        userId: { not: (session.user as { id: string }).id }, // Exclude my own actions
-        task: {
-          OR: [
-            { creatorId: (session.user as { id: string }).id },
-            { assignees: { some: { userId: (session.user as { id: string }).id } } }
-          ]
-        }
-      },
-      include: {
-        user: { select: { name: true, image: true } },
-        task: { 
-          include: { 
-            project: { select: { id: true, name: true, color: true } },
-            assignees: { include: { user: { select: { id: true, name: true, image: true } } } },
-            tags: { include: { tag: true } }
-          }
-        }
-      },
-      orderBy: { createdAt: "desc" },
-      take: 20
-    });
+    // 1. Get task IDs where user is creator or assignee
+    const { data: creatorTasks } = await supabase.from('Task').select('id').eq('creatorId', user.id);
+    const { data: assignedTasks } = await supabase.from('TaskAssignee').select('taskId').eq('userId', user.id);
+    
+    const relevantTaskIds = [
+      ...(creatorTasks?.map(t => t.id) || []),
+      ...(assignedTasks?.map(t => t.taskId) || [])
+    ];
 
-    const formatted = notifications.map(n => ({
+    if (relevantTaskIds.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    // 2. Fetch ActivityLogs for those tasks
+    const { data: notifications, error: fetchError } = await supabase
+      .from('ActivityLog')
+      .select(`
+        id,
+        action,
+        entityType,
+        createdAt,
+        user:User ( name, image ),
+        task:Task (
+          id,
+          title,
+          project:Project ( id, name, color ),
+          assignees:TaskAssignee ( user:User ( id, name, image ) ),
+          tags:TaskTag ( tag:Tag ( * ) )
+        )
+      `)
+      .neq('userId', user.id)
+      .in('taskId', relevantTaskIds)
+      .order('createdAt', { ascending: false })
+      .limit(20);
+
+    if (fetchError) throw fetchError;
+
+    const formatted = (notifications || []).map((n: any) => ({
       id: n.id,
       user: n.user?.name || "Système",
       userImage: n.user?.image || null,
@@ -46,7 +61,7 @@ export async function GET() {
 
     return NextResponse.json(formatted);
   } catch (error) {
-    console.error(error);
+    console.error("Fetch Notifications Error:", error);
     return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 });
   }
 }

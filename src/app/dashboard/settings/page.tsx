@@ -3,11 +3,10 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { 
-  User, 
+  User as UserIcon, 
   Bell, 
   Palette, 
   Shield, 
@@ -27,12 +26,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SettingsPage() {
-  const { data: session } = useSession();
+  const supabase = createClient();
   const { theme, setTheme } = useTheme();
+  const [user, setUser] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+  }, [supabase.auth]);
 
   const handleSave = () => {
     setIsSaving(true);
@@ -43,6 +50,8 @@ export default function SettingsPage() {
       setTimeout(() => setSuccess(false), 2000);
     }, 1000);
   };
+
+  const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "";
 
   return (
     <div className="max-w-4xl mx-auto space-y-10 pb-20">
@@ -62,7 +71,7 @@ export default function SettingsPage() {
           <CardHeader className="border-b border-white/5 bg-muted/5">
             <div className="flex items-center gap-3">
                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                  <User className="h-5 w-5" />
+                  <UserIcon className="h-5 w-5" />
                </div>
                <div>
                   <CardTitle className="text-lg font-black tracking-tight">Profil Utilisateur</CardTitle>
@@ -76,11 +85,11 @@ export default function SettingsPage() {
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-xs font-black uppercase tracking-widest opacity-60">Nom complet</Label>
-                <Input id="name" defaultValue={session?.user?.name || ""} className="bg-muted/10 border-white/5 focus:border-primary/40 transition-all font-bold" />
+                <Input id="name" defaultValue={userName} className="bg-muted/10 border-white/5 focus:border-primary/40 transition-all font-bold" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-xs font-black uppercase tracking-widest opacity-60">Addresse Email</Label>
-                <Input id="email" type="email" defaultValue={session?.user?.email || ""} className="bg-muted/10 border-white/5 focus:border-primary/40 transition-all font-bold" />
+                <Input id="email" type="email" defaultValue={user?.email || ""} className="bg-muted/10 border-white/5 focus:border-primary/40 transition-all font-bold" disabled />
               </div>
             </div>
           </CardContent>

@@ -1,44 +1,65 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const userId = (session.user as { id: string }).id;
+    const userId = user.id;
 
-    const taskAccess = await prisma.task.findFirst({
-      where: {
-        id: params.id,
-        OR: [
-          { creatorId: userId },
-          { assignees: { some: { userId } } },
-          { project: { workspace: { members: { some: { userId } } } } }
-        ]
-      }
-    });
+    // Check task access: Creator, Assignee, or Workspace Member
+    const { data: taskAccess, error: accessError } = await supabase
+      .from('Task')
+      .select('id, creatorId, projectId, Project(workspaceId)')
+      .eq('id', params.id)
+      .single();
 
-    if (!taskAccess) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 404 });
+    if (accessError || !taskAccess) {
+      return NextResponse.json({ error: "Task not found or access denied" }, { status: 404 });
     }
 
-    const entries = await prisma.timeEntry.findMany({
-      where: { taskId: params.id },
-      include: {
-        user: {
-          select: { id: true, name: true, image: true }
-        }
-      },
-      orderBy: { createdAt: "desc" }
-    });
+    // Verify workspace membership or assignment
+    const { data: memberData } = await supabase
+      .from('WorkspaceMember')
+      .select('id')
+      .eq('workspaceId', taskAccess.Project.workspaceId)
+      .eq('userId', userId)
+      .single();
+
+    const { data: assignmentData } = await supabase
+      .from('TaskAssignee')
+      .select('taskId')
+      .eq('taskId', params.id)
+      .eq('userId', userId)
+      .single();
+
+    if (taskAccess.creatorId !== userId && !memberData && !assignmentData) {
+      return NextResponse.json({ error: "Unauthorized access" }, { status: 403 });
+    }
+
+    const { data: entries, error } = await supabase
+      .from('TimeEntry')
+      .select(`
+        *,
+        user:User (
+          id,
+          name,
+          email
+        )
+      `)
+      .eq('taskId', params.id)
+      .order('createdAt', { ascending: false });
+
+    if (error) throw error;
+
     return NextResponse.json(entries);
-  } catch {
+  } catch (error: any) {
+    console.error("Time-entries fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch time entries" }, { status: 500 });
   }
 }
@@ -47,51 +68,72 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const userId = (session.user as { id: string }).id;
+    const userId = user.id;
     const { duration, description, date } = await req.json();
     
     if (typeof duration !== "number" || duration < 0) {
       return NextResponse.json({ error: "Invalid duration" }, { status: 400 });
     }
 
-    const taskAccess = await prisma.task.findFirst({
-      where: {
-        id: params.id,
-        OR: [
-          { creatorId: userId },
-          { assignees: { some: { userId } } },
-          { project: { workspace: { members: { some: { userId } } } } }
-        ]
-      }
-    });
+    // Task access check
+    const { data: taskAccess, error: accessError } = await supabase
+      .from('Task')
+      .select('id, creatorId, projectId, Project(workspaceId)')
+      .eq('id', params.id)
+      .single();
 
-    if (!taskAccess) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 404 });
+    if (accessError || !taskAccess) {
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    const entry = await prisma.timeEntry.create({
-      data: {
+    // Verify workspace membership or assignment
+    const { data: memberData } = await supabase
+      .from('WorkspaceMember')
+      .select('id')
+      .eq('workspaceId', taskAccess.Project.workspaceId)
+      .eq('userId', userId)
+      .single();
+
+    const { data: assignmentData } = await supabase
+      .from('TaskAssignee')
+      .select('taskId')
+      .eq('taskId', params.id)
+      .eq('userId', userId)
+      .single();
+
+    if (taskAccess.creatorId !== userId && !memberData && !assignmentData) {
+      return NextResponse.json({ error: "Unauthorized access" }, { status: 403 });
+    }
+
+    const { data: entry, error: insertError } = await supabase
+      .from('TimeEntry')
+      .insert({
         duration,
         description: description || "",
-        date: date ? new Date(date) : new Date(),
+        date: date ? new Date(date).toISOString() : new Date().toISOString(),
         taskId: params.id,
         userId: userId,
-      },
-      include: {
-        user: {
-          select: { id: true, name: true, image: true }
-        }
-      }
-    });
+      })
+      .select(`
+        *,
+        user:User (
+          id,
+          name,
+          email
+        )
+      `)
+      .single();
 
-    // Optionally update task activity here or via separate trigger
-    
+    if (insertError) throw insertError;
+
     return NextResponse.json(entry);
-  } catch {
+  } catch (error: any) {
+    console.error("Time-entry creation error:", error);
     return NextResponse.json({ error: "Failed to create time entry" }, { status: 500 });
   }
 }

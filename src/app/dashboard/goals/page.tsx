@@ -15,15 +15,18 @@ export default function GoalsPage() {
     fetch("/api/goals")
       .then(res => res.json())
       .then(data => {
-        setGoals(data);
+        setGoals(Array.isArray(data) ? data : []);
       })
-      .catch(err => console.error(err))
+      .catch(err => {
+        console.error(err);
+        setGoals([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="p-8">Chargement des objectifs...</div>;
 
-  const avgProgress = goals.length > 0 
+  const avgProgress = Array.isArray(goals) && goals.length > 0 
     ? Math.round((goals as any[]).reduce((acc, g) => acc + g.progress, 0) / goals.length)
     : 0;
   return (
@@ -61,7 +64,7 @@ export default function GoalsPage() {
 
       <div className="space-y-4">
         <h2 className="text-xl font-semibold mt-8 mb-4">Company Objectives</h2>
-        {(goals as any[]).map((goal) => (
+        {Array.isArray(goals) && (goals as any[]).map((goal) => (
           <div key={goal.id} className="bg-card border rounded-xl p-5 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
               <div>

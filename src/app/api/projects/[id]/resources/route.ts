@@ -1,23 +1,25 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const resources = await (prisma as any).projectResource.findMany({
-      where: { projectId: params.id },
-      orderBy: { createdAt: "desc" }
-    });
+    const { data: resources, error } = await supabase
+      .from('Resource')
+      .select('*')
+      .eq('projectId', params.id)
+      .order('createdAt', { ascending: false });
+
+    if (error) throw error;
     return NextResponse.json(resources);
-  } catch {
+  } catch (err: any) {
+    console.error("Resources fetch error:", err);
     return NextResponse.json({ error: "Failed to fetch resources" }, { status: 500 });
   }
 }
@@ -26,8 +28,9 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const { title, url, type } = await req.json();
@@ -35,24 +38,22 @@ export async function POST(
       return NextResponse.json({ error: "Title and URL are required" }, { status: 400 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const project = await (prisma as any).project.update({
-      where: { id: params.id },
-      data: {
-        resources: {
-          create: {
-            title,
-            url,
-            type: type || "LINK",
-          }
-        }
-      },
-      include: { resources: true }
-    });
+    const { data: resource, error: insertError } = await supabase
+      .from('Resource')
+      .insert({
+        title,
+        url,
+        type: type || "LINK",
+        projectId: params.id
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
     
-    return NextResponse.json(project.resources[project.resources.length - 1]);
-  } catch (_error: unknown) {
-    console.error(_error);
+    return NextResponse.json(resource);
+  } catch (err: any) {
+    console.error("Resource creation error:", err);
     return NextResponse.json({ error: "Failed to create resource" }, { status: 500 });
   }
 }

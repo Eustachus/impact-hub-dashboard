@@ -20,10 +20,14 @@ export default function TimeTrackingPage() {
     fetch("/api/time-entries")
       .then(res => res.json())
       .then(data => {
-        setRecentEntries(data);
+        setRecentEntries(Array.isArray(data) ? data : []);
         setLoading(false);
       })
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+        setRecentEntries([]);
+        setLoading(false);
+      });
   }, []);
 
   useEffect(() => {
@@ -113,7 +117,7 @@ export default function TimeTrackingPage() {
           </CardHeader>
           <CardContent>
             <div className="divide-y">
-              {(recentEntries as any[]).map((entry) => (
+              {Array.isArray(recentEntries) && (recentEntries as any[]).map((entry) => (
                 <div key={(entry as any).id} className="py-4 flex items-center justify-between group">
                   <div className="space-y-1">
                     <p className="font-medium group-hover:text-primary transition-colors cursor-pointer">{(entry as any).task}</p>

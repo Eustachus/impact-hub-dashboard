@@ -1,41 +1,64 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
   _: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const tasks = await prisma.task.findMany({
-      where: { projectId: params.id },
-      include: {
-        assignees: {
-          include: {
-            user: {
-              select: { id: true, name: true, image: true }
-            }
-          }
-        },
-        blocking: {
-          include: { blockedBy: true }
-        },
-        blockedBy: {
-          include: { blocking: true }
-        },
+    const { data: tasks, error } = await supabase
+      .from('Task')
+      .select(`
+        *,
+        assignees:TaskAssignee (
+          userId,
+          user:User (
+            id,
+            name,
+            image
+          )
+        ),
+        blocking:TaskDependency!TaskDependency_blockedTaskId_fkey (
+          blockedBy:Task!TaskDependency_taskId_fkey (*)
+        ),
+        blockedBy:TaskDependency!TaskDependency_taskId_fkey (
+          blocking:Task!TaskDependency_blockedTaskId_fkey (*)
+        ),
+        timeEntries:TimeEntry (*)
+      `)
+      .eq('projectId', params.id)
+      .order('order', { ascending: true });
+
+    if (error) throw error;
+
+    // Manual count mapping since Supabase join count is complex
+    const tasksWithCount = await Promise.all(tasks.map(async (t: any) => {
+      const { count: commentCount } = await supabase
+        .from('Comment')
+        .select('*', { count: 'exact', head: true })
+        .eq('taskId', t.id);
+      
+      const { count: subtaskCount } = await supabase
+        .from('Task')
+        .select('*', { count: 'exact', head: true })
+        .eq('parentId', t.id);
+
+      return {
+        ...t,
         _count: {
-          select: { comments: true, subtasks: true }
-        },
-        timeEntries: true
-      },
-      orderBy: { order: "asc" }
-    });
-    return NextResponse.json(tasks);
-  } catch {
+          comments: commentCount || 0,
+          subtasks: subtaskCount || 0
+        }
+      };
+    }));
+
+    return NextResponse.json(tasksWithCount);
+  } catch (error: any) {
+    console.error("Project tasks fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch project tasks" }, { status: 500 });
   }
 }
@@ -44,37 +67,59 @@ export async function POST(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const json = await req.json();
     const { title, description, status, priority, sectionId, startDate, dueDate, parentId, assigneeIds, effort } = json;
     
-    const task = await prisma.task.create({
-      data: {
+    // 1. Create task
+    const { data: task, error: taskError } = await supabase
+      .from('Task')
+      .insert({
         title,
         description: description || "",
         status: status || "TODO",
         priority: priority || "NONE",
         projectId: params.id,
-        creatorId: (session.user as { id: string }).id,
+        creatorId: user.id,
         sectionId: sectionId || null,
-        startDate: startDate ? new Date(startDate) : null,
-        dueDate: dueDate ? new Date(dueDate) : null,
+        startDate: startDate ? new Date(startDate).toISOString() : null,
+        dueDate: dueDate ? new Date(dueDate).toISOString() : null,
         parentId: parentId || null,
         order: 0,
         effort: effort || null,
-        assignees: assigneeIds ? {
-          create: assigneeIds.map((userId: string) => ({ userId }))
-        } : undefined,
-      },
-      include: {
-        assignees: { include: { user: true } }
-      }
-    });
-    return NextResponse.json(task);
-  } catch {
+      })
+      .select()
+      .single();
+
+    if (taskError) throw taskError;
+
+    // 2. Add assignees
+    if (assigneeIds && assigneeIds.length > 0) {
+      await supabase
+        .from('TaskAssignee')
+        .insert(assigneeIds.map((userId: string) => ({ taskId: task.id, userId })));
+    }
+
+    // 3. Get full task with assignees for response
+    const { data: fullTask } = await supabase
+      .from('Task')
+      .select(`
+        *,
+        assignees:TaskAssignee (
+          userId,
+          user:User (*)
+        )
+      `)
+      .eq('id', task.id)
+      .single();
+
+    return NextResponse.json(fullTask);
+  } catch (error: any) {
+    console.error("Task creation error:", error);
     return NextResponse.json({ error: "Failed to create task" }, { status: 500 });
   }
 }
@@ -82,8 +127,9 @@ export async function POST(
 export async function PATCH(
   req: Request
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const supabase = createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
     const { id, taskId, title, description, status, priority, order, sectionId, startDate, dueDate, effort, completed, assigneeIds } = await req.json();
@@ -91,31 +137,57 @@ export async function PATCH(
     const targetId = id || taskId;
     if (!targetId) return NextResponse.json({ error: "Task ID is required" }, { status: 400 });
 
-    const task = await prisma.task.update({
-      where: { id: targetId },
-      data: {
-        title,
-        description,
-        status,
-        priority,
-        order,
-        sectionId,
-        startDate: startDate ? new Date(startDate) : undefined,
-        dueDate: dueDate ? new Date(dueDate) : undefined,
-        effort: effort !== undefined ? effort : undefined,
-        completed,
-        completedAt: completed ? new Date() : null,
-        assignees: assigneeIds ? {
-          deleteMany: {},
-          create: assigneeIds.map((userId: string) => ({ userId }))
-        } : undefined,
-      },
-      include: {
-        assignees: { include: { user: true } }
+    // 1. Update task
+    const { data: task, error: updateError } = await supabase
+      .from('Task')
+      .update({
+        ...(title !== undefined && { title }),
+        ...(description !== undefined && { description }),
+        ...(status !== undefined && { status }),
+        ...(priority !== undefined && { priority }),
+        ...(order !== undefined && { order }),
+        ...(sectionId !== undefined && { sectionId }),
+        ...(startDate !== undefined && { startDate: startDate ? new Date(startDate).toISOString() : null }),
+        ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate).toISOString() : null }),
+        ...(effort !== undefined && { effort }),
+        ...(completed !== undefined && { 
+          completed,
+          completedAt: completed ? new Date().toISOString() : null 
+        }),
+      })
+      .eq('id', targetId)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
+
+    // 2. Handle assignments if provided
+    if (assigneeIds) {
+      // Clear old and insert new
+      await supabase.from('TaskAssignee').delete().eq('taskId', targetId);
+      if (assigneeIds.length > 0) {
+        await supabase
+          .from('TaskAssignee')
+          .insert(assigneeIds.map((userId: string) => ({ taskId: targetId, userId })));
       }
-    });
-    return NextResponse.json(task);
-  } catch {
-    return NextResponse.json({ error: "Failed to update task positions" }, { status: 500 });
+    }
+
+    // 3. Get full task for response
+    const { data: fullTask } = await supabase
+      .from('Task')
+      .select(`
+        *,
+        assignees:TaskAssignee (
+          userId,
+          user:User (*)
+        )
+      `)
+      .eq('id', targetId)
+      .single();
+
+    return NextResponse.json(fullTask);
+  } catch (error: any) {
+    console.error("Task update error:", error);
+    return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
   }
 }

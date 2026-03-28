@@ -21,20 +21,25 @@ export default function CalendarPage() {
     fetch(`/api/tasks?date=${format(currentDate, 'yyyy-MM-dd')}`)
       .then(res => res.json())
       .then(data => {
-        setTasks(data);
+        setTasks(Array.isArray(data) ? data : []);
       })
-      .catch(err => console.error(err))
+      .catch(err => {
+        console.error(err);
+        setTasks([]);
+      })
       .finally(() => setLoading(false));
   }, [currentDate]);
 
   if (loading) return <div className="p-8">Chargement du calendrier...</div>;
 
-  const events = (tasks as any[]).filter(t => t.dueDate).map(t => ({
-    task: t,
-    title: t.title,
-    date: new Date(t.dueDate),
-    type: t.priority === 'HIGH' ? 'deadline' : 'meeting'
-  }));
+  const events = (Array.isArray(tasks) ? tasks : [])
+    .filter((t: any) => t.dueDate)
+    .map((t: any) => ({
+      task: t,
+      title: t.title,
+      date: new Date(t.dueDate),
+      type: t.priority === 'HIGH' ? 'deadline' : 'meeting'
+    }));
 
   return (
     <div className="space-y-6 h-full flex flex-col">

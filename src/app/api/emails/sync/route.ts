@@ -1,31 +1,26 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const supabase = createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userId = (session.user as { id: string }).id;
+  const userId = user.id;
 
   try {
-    // 1. Find the user's Google Account
-    const googleAccount = await prisma.account.findFirst({
-      where: {
-        userId: userId,
-        provider: "google",
-      },
-    });
+    // 1. Find the user's Google Account from Supabase
+    const { data: googleAccount, error: accountError } = await supabase
+      .from('Account')
+      .select('access_token')
+      .eq('userId', userId)
+      .eq('provider', 'google')
+      .single();
 
-    if (!googleAccount || !googleAccount.access_token) {
+    if (accountError || !googleAccount?.access_token) {
       return NextResponse.json({ error: "Google account not connected" }, { status: 403 });
     }
 
-    // Optional: Normally here we would check if access_token is expired and use refresh_token to get a new one.
-    // For this MVP, we will try to use the current access_token.
     const accessToken = googleAccount.access_token;
 
     // 2. Fetch recent message IDs from Gmail
@@ -59,37 +54,40 @@ export async function POST() {
     const fullMessages = await Promise.all(emailPromises);
     const validMessages = fullMessages.filter(Boolean);
 
-    // 4. Transform and save to Database
+    // 4. Transform and save to Database via Supabase
     const savedEmails = [];
-    for (const email of validMessages) {
-      const headers = email.payload?.headers || [];
+    for (const emailMsg of validMessages) {
+      const headers = emailMsg.payload?.headers || [];
       const getHeader = (name: string) => headers.find((h: { name: string; value: string }) => h.name.toLowerCase() === name.toLowerCase())?.value;
 
       const subject = getHeader("subject") || "No Subject";
       const from = getHeader("from") || "Unknown Sender";
       const dateStr = getHeader("date");
-      const date = dateStr ? new Date(dateStr) : new Date();
+      const date = dateStr ? new Date(dateStr).toISOString() : new Date().toISOString();
       
-      const snippet = email.snippet || "";
+      const snippet = emailMsg.snippet || "";
 
       // Upsert into our database
-      const saved = await prisma.emailMessage.upsert({
-        where: { messageId: email.id },
-        update: {
-          labels: JSON.stringify(email.labelIds || []),
-        },
-        create: {
-          messageId: email.id,
-          threadId: email.threadId,
+      const { data: saved, error: upsertError } = await supabase
+        .from('EmailMessage')
+        .upsert({
+          messageId: emailMsg.id,
+          threadId: emailMsg.threadId,
           subject,
           snippet,
           sender: from,
           date,
-          labels: JSON.stringify(email.labelIds || []),
+          labels: JSON.stringify(emailMsg.labelIds || []),
           userId,
-          read: !(email.labelIds || []).includes("UNREAD")
-        }
-      });
+          read: !(emailMsg.labelIds || []).includes("UNREAD")
+        }, { onConflict: 'messageId' })
+        .select()
+        .single();
+
+      if (upsertError) {
+        console.error("Email upsert error:", upsertError);
+        continue;
+      }
       savedEmails.push(saved);
     }
 
@@ -99,29 +97,29 @@ export async function POST() {
       message: "Emails synchronized successfully" 
     });
 
-  } catch (_error: unknown) {
-    console.error("Email sync error:", _error);
+  } catch (error: any) {
+    console.error("Email sync error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const userId = (session.user as { id: string }).id;
+  const supabase = createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const emails = await prisma.emailMessage.findMany({
-      where: { userId },
-      orderBy: { date: "desc" },
-      take: 20
-    });
+    const { data: emails, error } = await supabase
+      .from('EmailMessage')
+      .select('*')
+      .eq('userId', user.id)
+      .order('date', { ascending: false })
+      .limit(20);
 
+    if (error) throw error;
     return NextResponse.json(emails);
-  } catch {
+  } catch (error: any) {
+    console.error("Email fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch saved emails" }, { status: 500 });
   }
 }

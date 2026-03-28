@@ -19,15 +19,18 @@ export default function TimelinePage() {
     fetch("/api/tasks")
       .then(res => res.json())
       .then(data => {
-        setTasks(data);
+        setTasks(Array.isArray(data) ? data : []);
       })
-      .catch(err => console.error(err))
+      .catch(err => {
+        console.error(err);
+        setTasks([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="p-8">Chargement de la timeline...</div>;
 
-  const timelineTasks = (tasks as any[]).map((t, idx) => {
+  const timelineTasks = (Array.isArray(tasks) ? tasks : []).map((t: any, idx) => {
     const start = t.startDate ? new Date(t.startDate) : new Date(t.createdAt);
     const end = t.dueDate ? new Date(t.dueDate) : addDays(start, 2);
     
