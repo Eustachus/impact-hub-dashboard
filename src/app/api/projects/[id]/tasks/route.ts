@@ -14,24 +14,19 @@ export async function GET(
       .from('Task')
       .select(`
         *,
-        assignees:TaskAssignee (
-          userId,
-          user:User (
-            id,
-            name,
-            image
+        assignees:TaskAssignment (
+          membership:Membership (
+            user:User (
+              id,
+              name,
+              image
+            )
           )
-        ),
-        blocking:TaskDependency!TaskDependency_blockedTaskId_fkey (
-          blockedBy:Task!TaskDependency_taskId_fkey (*)
-        ),
-        blockedBy:TaskDependency!TaskDependency_taskId_fkey (
-          blocking:Task!TaskDependency_blockedTaskId_fkey (*)
         ),
         timeEntries:TimeEntry (*)
       `)
       .eq('projectId', params.id)
-      .order('order', { ascending: true });
+      .order('createdAt', { ascending: true });
 
     if (error) throw error;
 

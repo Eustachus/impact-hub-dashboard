@@ -1,9 +1,9 @@
-const { PrismaClient } = require('@prisma/client');
+require('dotenv').config();
+const { PrismaClient } = require('../src/generated/client');
+const prisma = new PrismaClient();
 const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-
-const prisma = new PrismaClient();
 
 async function main() {
   const attachments = await prisma.attachment.findMany({

@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require('../src/generated/client');
 const prisma = new PrismaClient();
 
 // Helpers to map "Month Sx" to a dummy 2026 date range

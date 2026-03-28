@@ -24,6 +24,7 @@ export function ProjectTimelineView({ tasks, onTaskClick }: ProjectTimelineViewP
   };
 
   const validTasks = useMemo(() => {
+    if (!Array.isArray(tasks)) return [];
     return tasks.filter(t => t.dueDate || t.startDate).sort((a, b) => {
       const dateA = new Date(a.startDate || a.dueDate).getTime();
       const dateB = new Date(b.startDate || b.dueDate).getTime();

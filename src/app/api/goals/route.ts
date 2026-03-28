@@ -10,6 +10,18 @@ export async function GET() {
   }
 
   try {
+    // 1. Get organization IDs where user is a member
+    const { data: memberships } = await supabase
+      .from('Membership')
+      .select('organizationId')
+      .eq('userId', user.id);
+    const organizationIds = memberships?.map(m => m.organizationId) || [];
+
+    if (organizationIds.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    // 2. Fetch goals for these organizations
     const { data: goals, error: fetchError } = await supabase
       .from('Goal')
       .select(`
@@ -19,6 +31,7 @@ export async function GET() {
         keyResults:KeyResult (*),
         owner:User ( name )
       `)
+      .in('organizationId', organizationIds)
       .order('createdAt', { ascending: false });
 
     if (fetchError) throw fetchError;

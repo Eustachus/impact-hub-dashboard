@@ -38,6 +38,7 @@ export function ProjectOverview({ project, tasks = [], onUpdate, onTaskClick }: 
   const members = project.members || [];
 
   const taskStats = useMemo(() => {
+    if (!Array.isArray(tasks)) return { total: 0, completed: 0, inProgress: 0, todo: 0 };
     const total = tasks.length;
     const completed = tasks.filter(t => t.status === 'DONE').length;
     const inProgress = tasks.filter(t => t.status === 'IN_PROGRESS').length;
@@ -238,6 +239,7 @@ export function ProjectOverview({ project, tasks = [], onUpdate, onTaskClick }: 
 
              <div className="space-y-8">
                {(() => {
+                 if (!Array.isArray(tasks)) return null;
                  const totalEst = tasks.reduce((sum, t) => sum + (t.effort || 0), 0);
                  const totalAct = tasks.reduce((sum, t) => sum + (t.timeEntries?.reduce((s: number, e: any) => s + e.duration, 0) || 0), 0) / 3600;
                  const progress = totalEst > 0 ? (totalAct / totalEst) * 100 : 0;
@@ -277,6 +279,7 @@ export function ProjectOverview({ project, tasks = [], onUpdate, onTaskClick }: 
                           if (allUsers.length === 0) return <p className="text-[10px] text-muted-foreground italic">No data.</p>;
 
                           return allUsers.slice(0, 3).map((user: any) => {
+                            if (!Array.isArray(tasks)) return null;
                             const userTasks = tasks.filter(t => t.assignees?.some((a: any) => a.userId === user.id));
                             const userEst = userTasks.reduce((sum, t) => sum + (t.effort || 0), 0);
                             const userAct = userTasks.reduce((sum, t) => sum + (t.timeEntries?.reduce((s: number, e: any) => s + e.duration, 0) || 0), 0) / 3600;

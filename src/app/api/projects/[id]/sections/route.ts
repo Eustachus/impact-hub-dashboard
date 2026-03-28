@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   _req: Request,
@@ -10,17 +11,24 @@ export async function GET(
   if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { data: sections, error } = await supabase
-      .from('Section')
-      .select('*')
-      .eq('projectId', params.id)
-      .order('order', { ascending: true });
+    const sections = await prisma.section.findMany({
+      where: { projectId: params.id },
+      orderBy: { order: 'asc' }
+    });
 
-    if (error) throw error;
     return NextResponse.json(sections);
   } catch (error: any) {
-    console.error("Sections fetch error:", error);
-    return NextResponse.json({ error: "Failed to fetch sections" }, { status: 500 });
+    console.error("Sections fetch error details:", {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack
+    });
+    return NextResponse.json({ 
+      error: "Failed to fetch sections", 
+      details: error.message,
+      code: error.code 
+    }, { status: 500 });
   }
 }
 
@@ -36,18 +44,14 @@ export async function POST(
     const { name, order } = await req.json();
     if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
 
-    const { data: section, error: insertError } = await supabase
-      .from('Section')
-      .insert({
+    const section = await prisma.section.create({
+      data: {
         name,
         order: order || 0,
         projectId: params.id
-      })
-      .select()
-      .single();
+      }
+    });
 
-    if (insertError) throw insertError;
-    
     return NextResponse.json(section);
   } catch (error: any) {
     console.error("Section creation error:", error);

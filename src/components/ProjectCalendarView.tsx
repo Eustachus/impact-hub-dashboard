@@ -32,6 +32,7 @@ export function ProjectCalendarView({ tasks, onTaskClick }: ProjectCalendarViewP
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
 
   const getDayTasks = (day: Date) => {
+    if (!Array.isArray(tasks)) return [];
     return tasks.filter(task => {
         if (!task.dueDate) return false;
         return isSameDay(new Date(task.dueDate), day);

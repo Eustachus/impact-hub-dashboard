@@ -1,4 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
+require('dotenv').config();
+const { PrismaClient } = require('./src/generated/client');
 const fs = require('fs');
 const path = require('path');
 

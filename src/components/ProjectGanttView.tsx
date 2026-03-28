@@ -38,6 +38,7 @@ export function ProjectGanttView({ tasks, onTaskClick }: ProjectGanttViewProps) 
   const [isAddingWork, setIsAddingWork] = useState(false);
 
   const filteredTasks = useMemo(() => {
+    if (!Array.isArray(tasks)) return [];
     return tasks.filter(task => {
         const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesActive = showOnlyActive ? (task.status !== 'DONE') : true;
@@ -65,6 +66,10 @@ export function ProjectGanttView({ tasks, onTaskClick }: ProjectGanttViewProps) 
   }, [zoomLevel]);
 
   const { startDate, intervals } = useMemo(() => {
+    if (!Array.isArray(tasks)) {
+      const start = subDays(startOfDay(new Date()), 30);
+      return { startDate: start, intervals: eachDayOfInterval({ start, end: addMonths(start, 4) }) };
+    }
     const dates = tasks.flatMap(t => [
       t.startDate ? new Date(t.startDate) : null,
       t.dueDate ? new Date(t.dueDate) : null
@@ -465,7 +470,7 @@ export function ProjectGanttView({ tasks, onTaskClick }: ProjectGanttViewProps) 
                                             )}
 
                                             {/* Dependency Lines */}
-                                            {showDependencies && task.dependencies?.map((depId: string) => {
+                                            {showDependencies && Array.isArray(tasks) && task.dependencies?.map((depId: string) => {
                                                 const depTask = tasks.find(t => t.id === depId);
                                                 if (!depTask) return null;
                                                 return (

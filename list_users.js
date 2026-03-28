@@ -1,18 +1,23 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const { PrismaClient } = require('./src/generated/client');
+
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: 'file:d:/Studio26/Portfolio/Romance%20HOUNKPATIN/Dashboard/focus/prisma/dev.db'
+    }
+  }
+});
 
 async function main() {
-  const users = await prisma.user.findMany({
-    select: { email: true, name: true }
-  });
-  console.log('USERS_START');
-  console.log(JSON.stringify(users, null, 2));
-  console.log('USERS_END');
-  await prisma.$disconnect();
+  try {
+    const users = await prisma.user.findMany();
+    console.log(JSON.stringify(users, null, 2));
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
-main().catch(async (e) => {
-  console.error(e);
-  await prisma.$disconnect();
-  process.exit(1);
-});
+main();

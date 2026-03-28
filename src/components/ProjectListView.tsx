@@ -25,6 +25,8 @@ export function ProjectListView({ tasks, onTaskClick }: ProjectListViewProps) {
         "done": { id: "done", title: "Done", tasks: [] }
     };
     
+    if (!Array.isArray(tasks)) return [];
+    
     tasks.forEach(t => {
         const status = (t.status || "todo").toLowerCase().replace('_', '-');
         if (groups[status]) groups[status].tasks.push(t);
