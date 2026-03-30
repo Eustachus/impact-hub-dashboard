@@ -24,7 +24,7 @@ export default function LoginPage() {
     const supabase = createClient();
     
     try {
-      const { error: loginError } = await supabase.auth.signInWithPassword({
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -40,13 +40,16 @@ export default function LoginPage() {
         } else {
           setError(loginError.message);
         }
+        setLoading(false);
+      } else if (data.session) {
+        // Force full page reload so middleware reads fresh cookies
+        window.location.href = "/dashboard";
       } else {
-        router.push("/dashboard");
-        router.refresh();
+        setError("Connexion réussie mais aucune session reçue.");
+        setLoading(false);
       }
     } catch (_err) {
       setError("Une erreur inattendue est survenue.");
-    } finally {
       setLoading(false);
     }
   };
