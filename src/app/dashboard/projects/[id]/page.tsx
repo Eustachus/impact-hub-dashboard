@@ -199,6 +199,26 @@ export default function ProjectBoardPage({ params }: { params: { id: string } })
     fetchBoardData();
   }, [params.id]);
 
+  // Listen for real-time task updates from other clients
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleTaskUpdate = (data: unknown) => {
+      const event = data as { projectId?: string; userId?: string };
+      if (event.projectId === params.id) {
+        fetchBoardData();
+      }
+    };
+
+    socket.on("task:updated", handleTaskUpdate);
+    socket.on("task:created", handleTaskUpdate);
+
+    return () => {
+      socket.off("task:updated", handleTaskUpdate);
+      socket.off("task:created", handleTaskUpdate);
+    };
+  }, [socket, params.id]);
+
   const fetchBoardData = async () => {
     try {
       const [projRes, tasksRes, sectionsRes] = await Promise.all([

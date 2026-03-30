@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { emitSocket } from "@/lib/socket";
 
 export async function GET(
   _: Request,
@@ -120,6 +121,13 @@ export async function POST(
       .eq('id', task.id)
       .single();
 
+    // 4. Broadcast creation via socket
+    emitSocket("task:created", {
+      taskId: task.id,
+      projectId: params.id,
+      userId: user.id,
+    });
+
     return NextResponse.json(fullTask);
   } catch (error: unknown) {
     console.error("Task creation error:", error);
@@ -176,7 +184,7 @@ export async function PATCH(
     }
 
     // 3. Get full task for response
-    const { data: fullTask } = await supabase
+    const { data: fullTaskData } = await supabase
       .from('Task')
       .select(`
         *,
@@ -187,6 +195,15 @@ export async function PATCH(
       `)
       .eq('id', targetId)
       .single();
+
+    const fullTask = fullTaskData as Record<string, unknown> | null;
+
+    // 4. Broadcast update via socket
+    emitSocket("task:updated", {
+      taskId: targetId,
+      projectId: fullTask?.projectId,
+      userId: user.id,
+    });
 
     return NextResponse.json(fullTask);
   } catch (error: unknown) {
