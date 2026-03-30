@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
@@ -17,30 +17,31 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           response = NextResponse.next({
             request,
           })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+          cookiesToSet.forEach(({ name, value, options: cookieOptions }) =>
+            response.cookies.set(name, value, cookieOptions)
           )
         },
       },
     }
   )
 
-  // IMPORTANT: Avoid writing any logic between createServerClient and
-  // supabase.auth.getUser(). A simple mistake can make it very hard to debug
-  // issues with users being logged out.
-
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Optimization: You can add route protection here if needed
-  // if (!user && !request.nextUrl.pathname.startsWith('/login') && ...) {
-  //   return NextResponse.redirect(new URL('/login', request.url))
-  // }
+  // Protect dashboard routes
+  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  // Redirect logged-in users away from auth pages
+  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
 
   return response
 }
@@ -52,8 +53,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - api (API routes handle their own auth)
      * Feel free to modify this pattern to include more paths.
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

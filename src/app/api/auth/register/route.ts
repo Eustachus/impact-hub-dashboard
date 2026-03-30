@@ -55,12 +55,12 @@ export async function POST(req: Request) {
       }
     }, { status: 201 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Registration error:", error);
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       message: "An unexpected error occurred during registration",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
     }, { status: 500 });
   }
 }

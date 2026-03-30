@@ -10,13 +10,15 @@ export async function GET() {
   }
 
   try {
-    // 1. Get task IDs where user is creator or assignee
-    const { data: creatorTasks } = await supabase.from('Task').select('id').eq('creatorId', user.id);
-    const { data: assignedTasks } = await supabase.from('TaskAssignee').select('taskId').eq('userId', user.id);
+    // 1. Get task IDs where user is creator or assignee (parallel)
+    const [creatorResult, assignedResult] = await Promise.all([
+      supabase.from('Task').select('id').eq('creatorId', user.id),
+      supabase.from('TaskAssignee').select('taskId').eq('userId', user.id),
+    ]);
     
     const relevantTaskIds = [
-      ...(creatorTasks?.map(t => t.id) || []),
-      ...(assignedTasks?.map(t => t.taskId) || [])
+      ...(creatorResult.data?.map(t => t.id) || []),
+      ...(assignedResult.data?.map(t => t.taskId) || [])
     ];
 
     if (relevantTaskIds.length === 0) {
@@ -47,17 +49,21 @@ export async function GET() {
 
     if (fetchError) throw fetchError;
 
-    const formatted = (notifications || []).map((n: any) => ({
-      id: n.id,
-      user: n.user?.name || "Système",
-      userImage: n.user?.image || null,
-      action: n.action,
-      target: n.task?.title || "Projet",
-      task: n.task || null,
-      type: n.entityType.toLowerCase(),
-      time: new Date(n.createdAt).toLocaleTimeString(),
-      read: true // For now
-    }));
+    const formatted = (notifications || []).map((n: Record<string, unknown>) => {
+      const user = n.user as Record<string, unknown> | undefined;
+      const task = n.task as Record<string, unknown> | undefined;
+      return {
+        id: n.id,
+        user: user?.name || "Système",
+        userImage: user?.image || null,
+        action: n.action,
+        target: task?.title || "Projet",
+        task: n.task || null,
+        type: (n.entityType as string).toLowerCase(),
+        time: new Date(n.createdAt as string).toLocaleTimeString(),
+        read: true // For now
+      };
+    });
 
     return NextResponse.json(formatted);
   } catch (error) {

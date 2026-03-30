@@ -1,23 +1,30 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useEffect } from "react";
-import { StickyNote, Save } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Save } from "lucide-react";
 
 export function PrivateNotepadWidget() {
   const [note, setNote] = useState("");
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("focus_home_note");
     if (saved) setNote(saved);
   }, []);
 
+  const saveToStorage = useCallback((val: string) => {
+    localStorage.setItem("focus_home_note", val);
+    setLastSaved(new Date());
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.target.value;
     setNote(val);
-    localStorage.setItem("focus_home_note", val);
-    setLastSaved(new Date());
+
+    // Debounce localStorage writes (500ms)
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => saveToStorage(val), 500);
   };
 
   return (

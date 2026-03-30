@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description: "Your Focus dashboard — overview of projects, tasks, and productivity stats.",
+};
 
 export default function DashboardLayout({
   children,

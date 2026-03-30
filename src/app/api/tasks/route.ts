@@ -17,7 +17,6 @@ export async function GET() {
       .eq('userId', user.id);
     
     const organizationIds = memberships?.map(m => m.organizationId) || [];
-    const memberIds = memberships?.map(m => m.id) || [];
 
     // 2. Fetch tasks for the user's organizations with project details
     const { data: tasks, error: fetchError } = await supabase

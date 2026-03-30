@@ -27,24 +27,26 @@ app.prepare().then(() => {
 
   const io = new Server(server, {
     cors: {
-      origin: "*",
+      origin: process.env.NODE_ENV === "production"
+        ? process.env.NEXTAUTH_URL || false
+        : "http://localhost:3000",
       methods: ["GET", "POST"]
     }
   });
 
+  // Store io instance globally so API routes can access it
+  global.__socket_io = io;
+
   io.on("connection", (socket) => {
     console.log("Client connected", socket.id);
 
-    // Join a specific project or task room
     socket.on("join-room", (roomId) => {
       socket.join(roomId);
       console.log(`Socket ${socket.id} joined room ${roomId}`);
     });
 
-    // Task updates
-    socket.on("task-updated", (data) => {
-      // Broadcast to everyone else in the room
-      socket.to(data.roomId).emit("task-updated-received", data);
+    socket.on("leave-room", (roomId) => {
+      socket.leave(roomId);
     });
 
     socket.on("disconnect", () => {

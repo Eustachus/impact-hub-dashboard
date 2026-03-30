@@ -2,8 +2,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { 
   DndContext, 
   closestCenter, 
@@ -36,8 +37,6 @@ import { UpcomingTasksWidget } from "@/components/home/UpcomingTasksWidget";
 import { PrivateNotepadWidget } from "@/components/home/PrivateNotepadWidget";
 import { RecentProjectsWidget } from "@/components/home/RecentProjectsWidget";
 import { StatsOverviewWidget } from "@/components/home/StatsOverviewWidget";
-import { TaskVelocityWidget } from "@/components/home/TaskVelocityWidget";
-import { ProjectHealthWidget } from "@/components/home/ProjectHealthWidget";
 import { RecentActivityWidget } from "@/components/home/RecentActivityWidget";
 import { GoalsOverviewWidget } from "@/components/home/GoalsOverviewWidget";
 import { AssignedToOthersWidget } from "@/components/home/AssignedToOthersWidget";
@@ -46,6 +45,16 @@ import { TaskDetailModal } from "@/components/TaskDetailModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/client";
+
+// Lazy load heavy recharts-based widgets
+const TaskVelocityWidget = dynamic(
+  () => import("@/components/home/TaskVelocityWidget").then(m => ({ default: m.TaskVelocityWidget })),
+  { ssr: false, loading: () => <div className="h-48 animate-pulse bg-muted/30 rounded-lg" /> }
+);
+const ProjectHealthWidget = dynamic(
+  () => import("@/components/home/ProjectHealthWidget").then(m => ({ default: m.ProjectHealthWidget })),
+  { ssr: false, loading: () => <div className="h-48 animate-pulse bg-muted/30 rounded-lg" /> }
+);
 
 const DEFAULT_WIDGETS = [
   { id: "stats", title: "Overview", subtitle: "Key Metrics", icon: "Zap", size: "col-span-1 border-primary/20" },
@@ -81,7 +90,8 @@ const BACKGROUNDS = [
 
 export default function DashboardPage() {
   const router = useRouter();
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
   const [user, setUser] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
@@ -178,6 +188,10 @@ export default function DashboardPage() {
     });
   };
 
+  const bgClass = useMemo(() => BACKGROUNDS.find(b => b.id === activeBackground)?.class || "bg-background", [activeBackground]);
+  const firstName = useMemo(() => user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0], [user]);
+  const pendingCount = useMemo(() => Array.isArray(tasks) ? tasks.filter((t: Record<string, unknown>) => t.status !== 'DONE').length : 0, [tasks]);
+
   if (authLoading || dataLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -188,9 +202,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  const bgClass = BACKGROUNDS.find(b => b.id === activeBackground)?.class || "bg-background";
-  const firstName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0];
 
   return (
     <div className={`-m-8 min-h-screen transition-all duration-1000 ease-in-out p-8 ${bgClass} font-sans`}>
@@ -206,7 +217,7 @@ export default function DashboardPage() {
               {new Date().getHours() < 12 ? "Bonjour," : "Bonsoir,"} <span className="text-primary">{firstName}</span>.
             </h1>
             <p className="text-muted-foreground font-medium text-lg pt-1">
-              Vous pilotez {(Array.isArray(projects) ? projects.length : 0)} initiatives sociales. {(Array.isArray(tasks) ? tasks.filter((t: any) => t.status !== 'DONE').length : 0)} tâches requièrent votre attention.
+              Vous pilotez {(Array.isArray(projects) ? projects.length : 0)} initiatives sociales. {pendingCount} tâches requièrent votre attention.
             </p>
           </div>
 

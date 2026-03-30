@@ -1,36 +1,70 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-export const useSocket = (roomId?: string) => {
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-
-  useEffect(() => {
-    // Connect to the same host that served the page
-    const socketInstance = io(window.location.origin, {
+function getSocket(): Socket | null {
+  if (typeof window === 'undefined') return null;
+  
+  const g = globalThis as Record<string, unknown>;
+  if (!g.__focus_socket) {
+    g.__focus_socket = io(window.location.origin, {
       path: "/socket.io/",
       addTrailingSlash: false,
     });
+  }
+  return g.__focus_socket as Socket;
+}
 
-    socketInstance.on('connect', () => {
+export const useSocket = (roomId?: string) => {
+  const [isConnected, setIsConnected] = useState(false);
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+    socketRef.current = socket;
+
+    const onConnect = () => {
       setIsConnected(true);
       if (roomId) {
-        socketInstance.emit('join-room', roomId);
+        socket.emit('join-room', roomId);
       }
-    });
+    };
 
-    socketInstance.on('disconnect', () => {
+    const onDisconnect = () => {
       setIsConnected(false);
-    });
+    };
 
-    setSocket(socketInstance);
+    if (socket.connected) {
+      onConnect();
+    }
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
 
     return () => {
-      socketInstance.disconnect();
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      if (roomId) {
+        socket.emit('leave-room', roomId);
+      }
     };
   }, [roomId]);
 
-  return { socket, isConnected };
+  const emit = useCallback((event: string, data: Record<string, unknown>) => {
+    const socket = socketRef.current;
+    if (socket?.connected) {
+      socket.emit(event, data);
+    }
+  }, []);
+
+  const on = useCallback((event: string, handler: (...args: unknown[]) => void) => {
+    const socket = socketRef.current;
+    if (!socket) return () => {};
+    socket.on(event, handler);
+    return () => { socket.off(event, handler); };
+  }, []);
+
+  return { socket: socketRef.current, isConnected, emit, on };
 };

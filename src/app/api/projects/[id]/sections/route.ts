@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { prisma } from "@/lib/prisma";
 
 export async function GET(
   _req: Request,
@@ -11,24 +10,18 @@ export async function GET(
   if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const sections = await prisma.section.findMany({
-      where: { projectId: params.id },
-      orderBy: { order: 'asc' }
-    });
+    const { data: sections, error } = await supabase
+      .from('Section')
+      .select('*')
+      .eq('projectId', params.id)
+      .order('order', { ascending: true });
 
-    return NextResponse.json(sections);
-  } catch (error: any) {
-    console.error("Sections fetch error details:", {
-      message: error.message,
-      code: error.code,
-      meta: error.meta,
-      stack: error.stack
-    });
-    return NextResponse.json({ 
-      error: "Failed to fetch sections", 
-      details: error.message,
-      code: error.code 
-    }, { status: 500 });
+    if (error) throw error;
+
+    return NextResponse.json(sections || []);
+  } catch (error: unknown) {
+    console.error("Sections fetch error:", (error as Error).message);
+    return NextResponse.json({ error: "Failed to fetch sections" }, { status: 500 });
   }
 }
 
@@ -44,17 +37,21 @@ export async function POST(
     const { name, order } = await req.json();
     if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
 
-    const section = await prisma.section.create({
-      data: {
+    const { data: section, error } = await supabase
+      .from('Section')
+      .insert({
         name,
         order: order || 0,
         projectId: params.id
-      }
-    });
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
 
     return NextResponse.json(section);
-  } catch (error: any) {
-    console.error("Section creation error:", error);
+  } catch (error: unknown) {
+    console.error("Section creation error:", (error as Error).message);
     return NextResponse.json({ error: "Failed to create section" }, { status: 500 });
   }
 }

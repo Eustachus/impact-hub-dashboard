@@ -30,29 +30,37 @@ export async function GET(
 
     if (error) throw error;
 
-    // Manual count mapping since Supabase join count is complex
-    const tasksWithCount = await Promise.all(tasks.map(async (t: any) => {
-      const { count: commentCount } = await supabase
-        .from('Comment')
-        .select('*', { count: 'exact', head: true })
-        .eq('taskId', t.id);
-      
-      const { count: subtaskCount } = await supabase
-        .from('Task')
-        .select('*', { count: 'exact', head: true })
-        .eq('parentId', t.id);
+    const taskList = (tasks || []) as Record<string, unknown>[];
 
-      return {
-        ...t,
-        _count: {
-          comments: commentCount || 0,
-          subtasks: subtaskCount || 0
-        }
-      };
+    // Batch fetch comment and subtask counts in 2 queries instead of 2N
+    const taskIds = taskList.map(t => t.id as string);
+
+    const [commentsResult, subtasksResult] = await Promise.all([
+      supabase.from('Comment').select('taskId').in('taskId', taskIds),
+      supabase.from('Task').select('parentId').in('parentId', taskIds),
+    ]);
+
+    // Count in memory
+    const commentCounts: Record<string, number> = {};
+    for (const c of (commentsResult.data || [])) {
+      commentCounts[c.taskId] = (commentCounts[c.taskId] || 0) + 1;
+    }
+
+    const subtaskCounts: Record<string, number> = {};
+    for (const s of (subtasksResult.data || [])) {
+      if (s.parentId) subtaskCounts[s.parentId] = (subtaskCounts[s.parentId] || 0) + 1;
+    }
+
+    const tasksWithCount = taskList.map(t => ({
+      ...t,
+      _count: {
+        comments: commentCounts[t.id as string] || 0,
+        subtasks: subtaskCounts[t.id as string] || 0,
+      }
     }));
 
     return NextResponse.json(tasksWithCount);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Project tasks fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch project tasks" }, { status: 500 });
   }
@@ -113,7 +121,7 @@ export async function POST(
       .single();
 
     return NextResponse.json(fullTask);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Task creation error:", error);
     return NextResponse.json({ error: "Failed to create task" }, { status: 500 });
   }
@@ -133,7 +141,7 @@ export async function PATCH(
     if (!targetId) return NextResponse.json({ error: "Task ID is required" }, { status: 400 });
 
     // 1. Update task
-    const { data: task, error: updateError } = await supabase
+    const { error: updateError } = await supabase
       .from('Task')
       .update({
         ...(title !== undefined && { title }),
@@ -181,7 +189,7 @@ export async function PATCH(
       .single();
 
     return NextResponse.json(fullTask);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Task update error:", error);
     return NextResponse.json({ error: "Failed to update task" }, { status: 500 });
   }

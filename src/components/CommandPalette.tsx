@@ -38,8 +38,14 @@ export function CommandPalette() {
       }
     };
 
+    const openFromOutside = () => setOpen(true);
+
     document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
+    document.addEventListener("open-command-palette", openFromOutside);
+    return () => {
+      document.removeEventListener("keydown", down);
+      document.removeEventListener("open-command-palette", openFromOutside);
+    };
   }, []);
 
   React.useEffect(() => {

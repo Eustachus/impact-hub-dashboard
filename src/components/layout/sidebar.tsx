@@ -105,7 +105,7 @@ function SidebarProjectList() {
         .catch(err => console.error("Sidebar fetch err:", err));
     };
     load();
-    const interval = setInterval(load, 10000); // 10s refresh
+    const interval = setInterval(load, 60000); // 60s refresh
     return () => clearInterval(interval);
   }, []);
 

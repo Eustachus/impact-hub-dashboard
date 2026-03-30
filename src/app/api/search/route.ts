@@ -36,13 +36,13 @@ export async function GET(req: Request) {
         href: `/dashboard/projects/${p.id}`,
         category: "Projets"
       })),
-      ...tasks.map((t: any) => ({
+      ...tasks.map((t: Record<string, unknown>) => ({
         id: `t-${t.id}`,
         title: t.title,
         type: "Tâche",
         href: `/dashboard/projects/${t.projectId}`,
         category: "Tâches",
-        subtitle: t.Project?.name
+        subtitle: (t.Project as Record<string, unknown> | undefined)?.name
       }))
     ];
 

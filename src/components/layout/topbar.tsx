@@ -2,7 +2,8 @@
 
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, Sun, Moon, Bell, LogOut, User, Settings } from "lucide-react";
+import { Search, Plus, Sun, Moon, LogOut, User as UserIcon, Settings } from "lucide-react";
+import type { User } from "@supabase/supabase-js";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,8 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { CreateTaskModal } from "@/components/CreateTaskModal";
+import { NotificationDropdown } from "@/components/NotificationDropdown";
+import { useSocket } from "@/hooks/useSocket";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -21,9 +24,11 @@ import { useRouter } from "next/navigation";
 export function Topbar() {
   const { setTheme, theme } = useTheme();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+  const supabase = supabaseRef.current;
+  const { socket } = useSocket();
 
   useEffect(() => {
     const getUser = async () => {
@@ -38,13 +43,21 @@ export function Topbar() {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth]);
+  }, [supabase]);
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
-  };
+  }, [supabase, router]);
+
+  const openCommandPalette = useCallback(() => {
+    document.dispatchEvent(new Event("open-command-palette"));
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(theme === "light" ? "dark" : "light");
+  }, [setTheme, theme]);
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-card/70 backdrop-blur-xl px-6 lg:h-[60px] sticky top-0 z-50">
@@ -55,22 +68,21 @@ export function Topbar() {
             <input
               type="search"
               placeholder="Rechercher... (Cmd+K)"
-              className="w-full appearance-none bg-muted/50 pl-8 shadow-none border border-white/5 rounded-md h-9 text-sm outline-none focus:ring-1 focus:ring-primary md:w-2/3 lg:w-1/3 transition-all focus:bg-muted/80"
+              className="w-full appearance-none bg-muted/50 pl-8 shadow-none border border-white/5 rounded-md h-9 text-sm outline-none focus:ring-1 focus:ring-primary md:w-2/3 lg:w-1/3 transition-all focus:bg-muted/80 cursor-pointer"
+              readOnly
+              onClick={openCommandPalette}
             />
           </div>
         </form>
       </div>
 
-      <Button variant="outline" size="icon" className="h-9 w-9 rounded-full relative">
-        <Bell className="h-4 w-4" />
-        <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive" />
-      </Button>
+      <NotificationDropdown socket={socket} />
 
       <Button
         variant="ghost"
         size="icon"
         className="h-9 w-9 rounded-full"
-        onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+        onClick={toggleTheme}
       >
         <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
         <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -82,8 +94,8 @@ export function Topbar() {
       </Button>
 
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 overflow-hidden ring-offset-background transition-all hover:ring-2 hover:ring-primary/20">
+        <DropdownMenuTrigger>
+          <div className="relative h-9 w-9 rounded-full p-0 overflow-hidden ring-offset-background transition-all hover:ring-2 hover:ring-primary/20 cursor-pointer">
             <Avatar className="h-9 w-9">
               {user?.user_metadata?.avatar_url && (
                 <AvatarImage src={user.user_metadata.avatar_url} alt={user?.user_metadata?.full_name || "User"} />
@@ -92,7 +104,7 @@ export function Topbar() {
                 {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || "?"}
               </AvatarFallback>
             </Avatar>
-          </Button>
+          </div>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-64 mt-2" align="end">
           <DropdownMenuLabel className="font-normal p-2">
@@ -106,7 +118,7 @@ export function Topbar() {
           <DropdownMenuSeparator />
           <Link href="/dashboard/settings">
             <DropdownMenuItem className="cursor-pointer gap-2">
-              <User className="h-4 w-4" />
+              <UserIcon className="h-4 w-4" />
               Profil
             </DropdownMenuItem>
           </Link>

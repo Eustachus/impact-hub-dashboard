@@ -1,6 +1,29 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { prisma } from "@/lib/prisma";
+
+async function checkProjectAccess(supabase: ReturnType<typeof createClient>, projectId: string, userId: string) {
+  // 1. Get the project with its workspace
+  const { data: projectData, error } = await supabase
+    .from('Project')
+    .select('*, workspace:Workspace!inner(*)')
+    .eq('id', projectId)
+    .maybeSingle();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const project = projectData as any;
+
+  if (error || !project) return { project: null, hasAccess: false };
+
+  // 2. Check if user is a member of the workspace
+  const { data: membership } = await supabase
+    .from('WorkspaceMember')
+    .select('id')
+    .eq('userId', userId)
+    .eq('workspaceId', project.workspaceId)
+    .maybeSingle();
+
+  return { project, hasAccess: !!membership };
+}
 
 export async function GET(
   _req: Request,
@@ -11,37 +34,28 @@ export async function GET(
   if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const userId = user.id;
-
-    // 1. Get project with workspace check
-    const project = await prisma.project.findUnique({
-      where: { id: params.id },
-      include: {
-        workspace: {
-          include: {
-            members: {
-              where: { userId }
-            }
-          }
-        },
-        _count: {
-          select: { tasks: true }
-        }
-      }
-    });
+    const { project, hasAccess } = await checkProjectAccess(supabase, params.id, user.id);
 
     if (!project) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    // 2. Verify workspace membership
-    if (project.workspace.members.length === 0) {
+    if (!hasAccess) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    return NextResponse.json(project);
-  } catch (err: any) {
-    console.error("Project fetch error:", err);
+    // Get task count
+    const { count } = await supabase
+      .from('Task')
+      .select('*', { count: 'exact', head: true })
+      .eq('projectId', params.id);
+
+    return NextResponse.json({
+      ...project,
+      _count: { tasks: count || 0 }
+    });
+  } catch (err: unknown) {
+    console.error("Project fetch error:", (err as Error).message);
     return NextResponse.json({ error: "Failed to fetch project" }, { status: 500 });
   }
 }
@@ -55,47 +69,34 @@ export async function PATCH(
   if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const userId = user.id;
+    const { hasAccess } = await checkProjectAccess(supabase, params.id, user.id);
 
-    // Access check
-    const projectAccess = await prisma.project.findUnique({
-      where: { id: params.id },
-      select: {
-        workspace: {
-          select: {
-            members: {
-              where: { userId }
-            }
-          }
-        }
-      }
-    });
-
-    if (!projectAccess) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
-
-    if (projectAccess.workspace.members.length === 0) {
+    if (!hasAccess) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const { name, description, brief, icon, status, color } = await req.json();
 
-    const updatedProject = await prisma.project.update({
-      where: { id: params.id },
-      data: {
-        ...(name && { name }),
-        ...(description !== undefined && { description }),
-        ...(brief !== undefined && { brief }),
-        ...(icon !== undefined && { icon }),
-        ...(status && { status }),
-        ...(color && { color }),
-      }
-    });
+    const updateData: Record<string, unknown> = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (brief !== undefined) updateData.brief = brief;
+    if (icon !== undefined) updateData.icon = icon;
+    if (status !== undefined) updateData.status = status;
+    if (color !== undefined) updateData.color = color;
+
+    const { data: updatedProject, error: updateError } = await supabase
+      .from('Project')
+      .update(updateData)
+      .eq('id', params.id)
+      .select()
+      .single();
+
+    if (updateError) throw updateError;
 
     return NextResponse.json(updatedProject);
-  } catch (err: any) {
-    console.error("Project update error:", err);
+  } catch (err: unknown) {
+    console.error("Project update error:", (err as Error).message);
     return NextResponse.json({ error: "Failed to update project" }, { status: 500 });
   }
 }
@@ -109,37 +110,22 @@ export async function DELETE(
   if (authError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const userId = user.id;
+    const { hasAccess } = await checkProjectAccess(supabase, params.id, user.id);
 
-    // Access check
-    const projectAccess = await prisma.project.findUnique({
-      where: { id: params.id },
-      select: {
-        workspace: {
-          select: {
-            members: {
-              where: { userId }
-            }
-          }
-        }
-      }
-    });
-
-    if (!projectAccess) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
-
-    if (projectAccess.workspace.members.length === 0) {
+    if (!hasAccess) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    await prisma.project.delete({
-      where: { id: params.id }
-    });
+    const { error: deleteError } = await supabase
+      .from('Project')
+      .delete()
+      .eq('id', params.id);
+
+    if (deleteError) throw deleteError;
 
     return NextResponse.json({ message: "Project deleted successfully" });
-  } catch (err: any) {
-    console.error("Project delete error:", err);
+  } catch (err: unknown) {
+    console.error("Project delete error:", (err as Error).message);
     return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
   }
 }

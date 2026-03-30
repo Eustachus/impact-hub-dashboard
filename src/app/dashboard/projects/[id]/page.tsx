@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import { 
   DndContext, 
   closestCorners, 
@@ -19,12 +19,6 @@ import { SortableContext, arrayMove, sortableKeyboardCoordinates, verticalListSo
 import { Button } from "@/components/ui/button";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ProjectOverview } from "@/components/ProjectOverview";
-import { ProjectListView } from "@/components/ProjectListView";
-import { ProjectTimelineView } from "@/components/ProjectTimelineView";
-import { ProjectCalendarView } from "@/components/ProjectCalendarView";
-import { ProjectGanttView } from "@/components/ProjectGanttView";
-import { ProjectWorkflowView } from "@/components/ProjectWorkflowView";
 import { TaskDetailModal } from "@/components/TaskDetailModal";
 import { useSocket } from "@/hooks/useSocket";
 import { 
@@ -33,6 +27,14 @@ import {
   Check, X, GitCommitHorizontal, Workflow, Star, ChevronDown, Share2, Zap, GitBranch
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+
+// Lazy load view components — only one is visible at a time
+const ProjectOverview = dynamic(() => import("@/components/ProjectOverview").then(m => ({ default: m.ProjectOverview })), { ssr: false });
+const ProjectListView = dynamic(() => import("@/components/ProjectListView").then(m => ({ default: m.ProjectListView })), { ssr: false });
+const ProjectTimelineView = dynamic(() => import("@/components/ProjectTimelineView").then(m => ({ default: m.ProjectTimelineView })), { ssr: false });
+const ProjectCalendarView = dynamic(() => import("@/components/ProjectCalendarView").then(m => ({ default: m.ProjectCalendarView })), { ssr: false });
+const ProjectGanttView = dynamic(() => import("@/components/ProjectGanttView").then(m => ({ default: m.ProjectGanttView })), { ssr: false });
+const ProjectWorkflowView = dynamic(() => import("@/components/ProjectWorkflowView").then(m => ({ default: m.ProjectWorkflowView })), { ssr: false });
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -537,7 +539,7 @@ export default function ProjectBoardPage({ params }: { params: { id: string } })
           {activeTab === "timeline" && <ProjectTimelineView tasks={tasks} onTaskClick={setSelectedTask} />}
           {activeTab === "calendar" && <ProjectCalendarView tasks={tasks} onTaskClick={setSelectedTask} />}
           {activeTab === "gantt" && <ProjectGanttView tasks={tasks} onTaskClick={setSelectedTask} />}
-          {activeTab === "workflow" && <ProjectWorkflowView />}
+          {activeTab === "workflow" && <ProjectWorkflowView projectId={params.id} />}
         </div>
       </main>
 

@@ -29,13 +29,17 @@ export async function GET() {
 
     if (fetchError) throw fetchError;
 
-    const formatted = entries.map((e: any) => ({
-      id: e.id,
-      task: e.task?.title || "Tâche inconnue",
-      project: e.task?.project?.name || "Projet inconnu",
-      duration: Math.floor(e.duration / 3600) + "h " + Math.floor((e.duration % 3600) / 60) + "m",
-      date: new Date(e.date).toLocaleDateString()
-    }));
+    const formatted = entries.map((e: Record<string, unknown>) => {
+      const task = e.task as Record<string, unknown> | undefined;
+      const project = task?.project as Record<string, unknown> | undefined;
+      return {
+        id: e.id,
+        task: task?.title || "Tâche inconnue",
+        project: project?.name || "Projet inconnu",
+        duration: Math.floor((e.duration as number) / 3600) + "h " + Math.floor(((e.duration as number) % 3600) / 60) + "m",
+        date: new Date(e.date as string).toLocaleDateString()
+      };
+    });
 
     return NextResponse.json(formatted);
   } catch (error) {

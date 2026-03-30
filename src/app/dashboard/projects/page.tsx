@@ -6,7 +6,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { CopyPlus, MoreHorizontal, LayoutGrid, List as ListIcon, FolderIcon, CheckCircle } from "lucide-react";
+import { CopyPlus, MoreHorizontal, LayoutGrid, List as ListIcon, FolderIcon, CheckCircle, FileText } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { CreateFromPdfModal } from "@/components/CreateFromPdfModal";
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function ProjectsPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [newProject, setNewProject] = useState({ name: "", description: "", color: "#3b82f6" });
@@ -101,9 +103,14 @@ export default function ProjectsPage() {
               <ListIcon className="h-4 w-4" />
             </Button>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <CopyPlus className="mr-2 h-4 w-4" /> Nouveau Projet
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsPdfModalOpen(true)}>
+              <FileText className="mr-2 h-4 w-4" /> Import PDF
+            </Button>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <CopyPlus className="mr-2 h-4 w-4" /> Nouveau Projet
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -226,6 +233,11 @@ export default function ProjectsPage() {
           </Card>
         </div>
       )}
+
+      <CreateFromPdfModal
+        isOpen={isPdfModalOpen}
+        onClose={() => setIsPdfModalOpen(false)}
+      />
     </div>
   );
 }

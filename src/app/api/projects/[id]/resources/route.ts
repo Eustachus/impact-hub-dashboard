@@ -11,14 +11,14 @@ export async function GET(
 
   try {
     const { data: resources, error } = await supabase
-      .from('Resource')
+      .from('ProjectResource')
       .select('*')
       .eq('projectId', params.id)
       .order('createdAt', { ascending: false });
 
     if (error) throw error;
     return NextResponse.json(resources);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Resources fetch error:", err);
     return NextResponse.json({ error: "Failed to fetch resources" }, { status: 500 });
   }
@@ -39,7 +39,7 @@ export async function POST(
     }
 
     const { data: resource, error: insertError } = await supabase
-      .from('Resource')
+      .from('ProjectResource')
       .insert({
         title,
         url,
@@ -52,7 +52,7 @@ export async function POST(
     if (insertError) throw insertError;
     
     return NextResponse.json(resource);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Resource creation error:", err);
     return NextResponse.json({ error: "Failed to create resource" }, { status: 500 });
   }

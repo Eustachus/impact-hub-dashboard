@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -40,7 +39,7 @@ export default function RegisterPage() {
       } else {
         setError(data.message || "Registration failed.");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -59,8 +58,8 @@ export default function RegisterPage() {
             </CardDescription>
           </CardHeader>
           <CardFooter>
-            <Button asChild className="w-full bg-green-600 hover:bg-green-700">
-              <Link href="/login">Go to Login</Link>
+            <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => router.push("/login")}>
+              Go to Login
             </Button>
           </CardFooter>
         </Card>

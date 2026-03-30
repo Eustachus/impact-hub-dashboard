@@ -1,9 +1,18 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-export const Dialog = ({ open, children }: { open?: boolean, onOpenChange?: (open: boolean) => void, children: React.ReactNode }) => {
+export const Dialog = ({ open, onOpenChange, children }: { open?: boolean, onOpenChange?: (open: boolean) => void, children: React.ReactNode }) => {
   if (open === undefined) return <>{children}</>
-  return open ? <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">{children}</div> : null
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onOpenChange?.(false)
+    }
+  }
+
+  return open
+    ? <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm" onClick={handleBackdropClick}>{children}</div>
+    : null
 }
 
 export const DialogTrigger = ({ children, onClick }: { children: React.ReactNode, onClick?: () => void }) => (
@@ -11,9 +20,16 @@ export const DialogTrigger = ({ children, onClick }: { children: React.ReactNode
 )
 
 export const DialogContent = ({ className, children, onClose }: { className?: string, children: React.ReactNode, onClose?: () => void }) => {
+  // Stop click propagation so backdrop click doesn't fire
+  const handleContentClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+  }
+
   return (
-    <div className={cn("relative bg-card rounded-lg shadow-lg border p-6 w-full max-w-lg", className)}>
-      <button onClick={onClose} className="absolute top-4 right-4 opacity-70 hover:opacity-100">✕</button>
+    <div className={cn("relative bg-card rounded-lg shadow-lg border p-6 w-full max-w-lg", className)} onClick={handleContentClick}>
+      {onClose && (
+        <button onClick={onClose} className="absolute top-4 right-4 opacity-70 hover:opacity-100">✕</button>
+      )}
       {children}
     </div>
   )

@@ -5,7 +5,7 @@
 import { useSocket } from "@/hooks/useSocket";
 import { useEffect, useState, useMemo } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, CheckCircle2, Check, Clock, Mail, RefreshCw } from "lucide-react";
+import { Bell, CheckCircle2, Check, Clock, Mail, RefreshCw, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TaskDetailModal } from "@/components/TaskDetailModal";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,7 @@ export default function InboxPage() {
   const [emails, setEmails] = useState<any[]>([]);
   const [emailStatus, setEmailStatus] = useState<"loading" | "disconnected" | "connected">("loading");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [convertingEmailId, setConvertingEmailId] = useState<string | null>(null);
   
   const { socket } = useSocket();
 
@@ -139,6 +140,38 @@ export default function InboxPage() {
       copy.add(id);
       return copy;
     });
+  };
+
+  const createTaskFromEmail = async (email: Record<string, unknown>) => {
+    setConvertingEmailId(email.id as string);
+    try {
+      // Find first available project
+      const projectsRes = await fetch("/api/projects");
+      const projects = await projectsRes.json();
+      if (!Array.isArray(projects) || projects.length === 0) {
+        alert("Create a project first to convert emails to tasks.");
+        return;
+      }
+
+      const res = await fetch(`/api/projects/${projects[0].id}/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `[Email] ${email.subject}`,
+          description: `From: ${email.sender}\n\n${email.snippet}`,
+          priority: "MEDIUM",
+          status: "TODO",
+        }),
+      });
+
+      if (res.ok) {
+        alert("Task created from email!");
+      }
+    } catch (err) {
+      console.error("Create task from email error:", err);
+    } finally {
+      setConvertingEmailId(null);
+    }
   };
 
   const handleNotificationClick = (notif: any) => {
@@ -253,20 +286,35 @@ export default function InboxPage() {
             <div className="p-16 text-center text-muted-foreground italic">Fetching your emails...</div>
           ) : emails.length > 0 ? (
             <div className="divide-y divide-white/5">
-               {emails.map((email: any) => (
-                 <div key={email.id} className="p-5 flex gap-4 transition-all cursor-pointer group hover:bg-muted/10 bg-blue-500/5 hover:bg-blue-500/10">
+               {emails.map((email: Record<string, unknown>) => (
+                 <div key={email.id as string} className="p-5 flex gap-4 transition-all cursor-pointer group hover:bg-muted/10 bg-blue-500/5 hover:bg-blue-500/10">
                     <Avatar className="h-10 w-10 shrink-0">
-                       <AvatarFallback className="bg-blue-500/20 text-blue-500 font-bold">{email.sender?.charAt(0)}</AvatarFallback>
+                       <AvatarFallback className="bg-blue-500/20 text-blue-500 font-bold">{(email.sender as string)?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                        <div className="flex items-center justify-between">
-                         <span className="font-bold text-sm truncate pr-4">{email.sender?.slice(0, Math.max(0, email.sender.indexOf('<'))) || email.sender}</span>
-                         <span className="text-[10px] text-muted-foreground font-black uppercase tracking-wider shrink-0">
-                           {new Date(email.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric'})}
-                         </span>
+                         <span className="font-bold text-sm truncate pr-4">{(email.sender as string)?.slice(0, Math.max(0, (email.sender as string).indexOf('<'))) || email.sender as string}</span>
+                         <div className="flex items-center gap-2 shrink-0">
+                           <span className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">
+                             {new Date(email.date as string).toLocaleDateString(undefined, { month: 'short', day: 'numeric'})}
+                           </span>
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             className="h-7 px-2 text-[10px] font-bold text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                             onClick={(e) => { e.stopPropagation(); createTaskFromEmail(email); }}
+                             disabled={convertingEmailId === email.id}
+                           >
+                             {convertingEmailId === email.id ? (
+                               <Loader2 className="h-3 w-3 animate-spin" />
+                             ) : (
+                               <><Plus className="h-3 w-3 mr-1" /> Task</>
+                             )}
+                           </Button>
+                         </div>
                        </div>
-                       <p className="text-[13px] font-semibold text-foreground/90 mt-0.5 truncate">{email.subject}</p>
-                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{email.snippet?.replace(/&#39;/g, "'").replace(/&quot;/g, '"')}</p>
+                       <p className="text-[13px] font-semibold text-foreground/90 mt-0.5 truncate">{email.subject as string}</p>
+                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{(email.snippet as string)?.replace(/&#39;/g, "'").replace(/&quot;/g, '"')}</p>
                     </div>
                  </div>
                ))}

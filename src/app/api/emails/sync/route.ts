@@ -97,7 +97,7 @@ export async function POST() {
       message: "Emails synchronized successfully" 
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Email sync error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -118,7 +118,7 @@ export async function GET() {
 
     if (error) throw error;
     return NextResponse.json(emails);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Email fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch saved emails" }, { status: 500 });
   }

@@ -41,14 +41,28 @@ export default function SettingsPage() {
     });
   }, [supabase.auth]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    // Mock save delay
-    setTimeout(() => {
-      setIsSaving(false);
+    setSuccess(false);
+
+    try {
+      const nameInput = document.getElementById("name") as HTMLInputElement;
+      const newName = nameInput?.value?.trim();
+
+      if (newName && newName !== userName) {
+        const { error } = await supabase.auth.updateUser({
+          data: { full_name: newName }
+        });
+        if (error) throw error;
+      }
+
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2000);
-    }, 1000);
+    } catch (err) {
+      console.error("Settings save error:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || "";

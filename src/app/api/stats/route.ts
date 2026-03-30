@@ -48,9 +48,9 @@ export async function GET() {
       supabase.from('Task').select('*, project:Project!inner(*)').in('organizationId', organizationIds).neq('status', 'DONE').not('dueDate', 'is', null).lte('dueDate', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()).order('dueDate', { ascending: true }).limit(5)
     ]);
 
-    const projectProgress = (projectsWithStats || []).map(p => {
-      const total = p.tasks?.length || 0;
-      const completed = p.tasks?.filter((t: any) => t.status === "DONE").length || 0;
+    const projectProgress = (projectsWithStats as Record<string, unknown>[] || []).map(p => {
+      const total = (p.tasks as Record<string, unknown>[] | undefined)?.length || 0;
+      const completed = (p.tasks as Record<string, unknown>[] | undefined)?.filter((t: Record<string, unknown>) => t.status === "DONE").length || 0;
       return {
         id: p.id,
         name: p.name,
@@ -68,12 +68,12 @@ export async function GET() {
       totalProjects: totalProjects || 0,
       projectProgress,
       upcomingDeadlines: upcomingDeadlines || [],
-      recentActivity: (recentTasks || []).map((t: any) => ({
+      recentActivity: (recentTasks || []).map((t: Record<string, unknown>) => ({
         id: t.id,
         user: "Vous",
         action: t.createdAt === t.updatedAt ? "a créé" : "a mis à jour",
         target: t.title,
-        project: t.project?.name,
+        project: (t.project as Record<string, unknown> | undefined)?.name,
         time: "À l'instant"
       }))
     });

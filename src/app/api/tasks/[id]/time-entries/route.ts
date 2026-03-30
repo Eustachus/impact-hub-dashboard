@@ -13,21 +13,28 @@ export async function GET(
     const userId = user.id;
 
     // Check task access: Creator, Assignee, or Workspace Member
-    const { data: taskAccess, error: accessError } = await supabase
+    const { data: taskAccessData, error: accessError } = await supabase
       .from('Task')
       .select('id, creatorId, projectId, Project(workspaceId)')
       .eq('id', params.id)
       .single();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const taskAccess = taskAccessData as any;
 
     if (accessError || !taskAccess) {
       return NextResponse.json({ error: "Task not found or access denied" }, { status: 404 });
     }
 
     // Verify workspace membership or assignment
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const projectData = taskAccess.Project as any;
+    const workspaceId = Array.isArray(projectData) ? projectData[0]?.workspaceId : projectData?.workspaceId;
+
     const { data: memberData } = await supabase
       .from('WorkspaceMember')
       .select('id')
-      .eq('workspaceId', taskAccess.Project.workspaceId)
+      .eq('workspaceId', workspaceId)
       .eq('userId', userId)
       .single();
 
@@ -58,7 +65,7 @@ export async function GET(
     if (error) throw error;
 
     return NextResponse.json(entries);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Time-entries fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch time entries" }, { status: 500 });
   }
@@ -81,21 +88,28 @@ export async function POST(
     }
 
     // Task access check
-    const { data: taskAccess, error: accessError } = await supabase
+    const { data: taskAccessData2, error: accessError } = await supabase
       .from('Task')
       .select('id, creatorId, projectId, Project(workspaceId)')
       .eq('id', params.id)
       .single();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const taskAccess = taskAccessData2 as any;
 
     if (accessError || !taskAccess) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
     // Verify workspace membership or assignment
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const projectData = taskAccess.Project as any;
+    const workspaceId = Array.isArray(projectData) ? projectData[0]?.workspaceId : projectData?.workspaceId;
+
     const { data: memberData } = await supabase
       .from('WorkspaceMember')
       .select('id')
-      .eq('workspaceId', taskAccess.Project.workspaceId)
+      .eq('workspaceId', workspaceId)
       .eq('userId', userId)
       .single();
 
@@ -132,7 +146,7 @@ export async function POST(
     if (insertError) throw insertError;
 
     return NextResponse.json(entry);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Time-entry creation error:", error);
     return NextResponse.json({ error: "Failed to create time entry" }, { status: 500 });
   }

@@ -24,7 +24,7 @@ export async function GET(
 
     if (error) throw error;
     return NextResponse.json(comments);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Comments fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch task comments" }, { status: 500 });
   }
@@ -60,7 +60,7 @@ export async function POST(
 
     if (insertError) throw insertError;
     return NextResponse.json(comment);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Comment creation error:", error);
     return NextResponse.json({ error: "Failed to create task comment" }, { status: 500 });
   }
