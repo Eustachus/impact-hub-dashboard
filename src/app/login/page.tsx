@@ -30,10 +30,15 @@ export default function LoginPage() {
       });
 
       if (loginError) {
-        if (loginError.message === "Email not confirmed") {
-          setError("Veuillez confirmer votre email avant de vous connecter.");
+        const msg = loginError.message.toLowerCase();
+        if (msg.includes("email not confirmed")) {
+          setError("Email non confirmé. Vérifie ta boîte mail ou désactive la confirmation dans Supabase → Auth → Providers → Email.");
+        } else if (msg.includes("invalid login credentials")) {
+          setError("Email ou mot de passe incorrect.");
+        } else if (msg.includes("fetch")) {
+          setError("Impossible de contacter le serveur. Vérifie les variables d'environnement Supabase dans Vercel.");
         } else {
-          setError("Identifiants invalides. Veuillez réessayer.");
+          setError(loginError.message);
         }
       } else {
         router.push("/dashboard");
