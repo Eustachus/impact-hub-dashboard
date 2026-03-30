@@ -1,11 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect, useCallback } from "react";
-import { Calendar, CheckCircle2, MoreHorizontal, User, MessageSquare, History as HistoryIcon, Send, X, Plus, Timer, Clock } from "lucide-react";
+import { Calendar, CheckCircle2, MoreHorizontal, User, MessageSquare, History as HistoryIcon, Send, X, Timer, Clock } from "lucide-react";
 import { TaskTimer } from "./TaskTimer";
 import { useToast } from "@/components/ToastProvider";
 import { useSocket } from "@/hooks/useSocket";
