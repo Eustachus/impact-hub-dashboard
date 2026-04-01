@@ -15,13 +15,12 @@ export async function GET(
       .from('Task')
       .select(`
         *,
-        assignees:TaskAssignment (
-          membership:Membership (
-            user:User (
-              id,
-              name,
-              image
-            )
+        assignees:TaskAssignee (
+          userId,
+          user:User (
+            id,
+            name,
+            image
           )
         ),
         timeEntries:TimeEntry (*)
@@ -136,7 +135,8 @@ export async function POST(
 }
 
 export async function PATCH(
-  req: Request
+  req: Request,
+  { params }: { params: { id: string } }
 ) {
   const supabase = createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -147,6 +147,17 @@ export async function PATCH(
     
     const targetId = id || taskId;
     if (!targetId) return NextResponse.json({ error: "Task ID is required" }, { status: 400 });
+
+    // Verify task belongs to this project
+    const { data: existingTask } = await supabase
+      .from('Task')
+      .select('id, projectId')
+      .eq('id', targetId)
+      .maybeSingle();
+
+    if (!existingTask || (existingTask as Record<string, unknown>).projectId !== params.id) {
+      return NextResponse.json({ error: "Task not found in this project" }, { status: 404 });
+    }
 
     // 1. Update task
     const { error: updateError } = await supabase

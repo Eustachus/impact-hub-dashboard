@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(
-  req: Request,
+  _req: Request,
   { params }: { params: { id: string } }
 ) {
   const supabase = createClient();
@@ -13,33 +13,55 @@ export async function GET(
   }
 
   try {
-    // 1. Fetch task joined with project for access check
     const { data: task, error: fetchError } = await supabase
       .from('Task')
       .select(`
         *,
         project:Project!inner (
+          id,
+          name,
+          workspaceId,
           workspace:Workspace!inner (
+            id,
             members:WorkspaceMember!inner ( userId )
           )
         ),
-        subtasks:Subtask (*),
         assignees:TaskAssignee (
+          userId,
           user:User (*)
         ),
         tags:TaskTag (
           tag:Tag (*)
+        ),
+        comments:Comment (
+          id,
+          content,
+          userId,
+          createdAt,
+          user:User ( id, name, image )
+        ),
+        subtasks:Task (
+          id,
+          title,
+          status,
+          priority,
+          order
         )
       `)
       .eq('id', params.id)
-      .eq('project.workspace.members.userId', user.id)
-      .order('createdAt', { foreignTable: 'subtasks', ascending: true })
       .single();
 
     if (fetchError || !task) {
-      // It might be a task where the user is just an assignee or creator, 
-      // even if the workspace join fails or is too restrictive.
-      // But standard access is via workspace.
+      return NextResponse.json({ error: "Task not found or access denied" }, { status: 404 });
+    }
+
+    // Access check: creator, assignee, or workspace member
+    const taskData = task as Record<string, unknown>;
+    const isCreator = taskData.creatorId === user.id;
+    const isAssignee = ((taskData.assignees as Record<string, unknown>[]) || [])
+      .some((a: Record<string, unknown>) => a.userId === user.id);
+
+    if (!isCreator && !isAssignee) {
       return NextResponse.json({ error: "Task not found or access denied" }, { status: 404 });
     }
 

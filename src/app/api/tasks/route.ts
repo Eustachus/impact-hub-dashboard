@@ -10,19 +10,35 @@ export async function GET() {
   }
 
   try {
-    // 1. Get organization IDs where user is a member
+    // 1. Get workspace IDs where user is a member
     const { data: memberships } = await supabase
-      .from('Membership')
-      .select('organizationId, id')
+      .from('WorkspaceMember')
+      .select('workspaceId')
       .eq('userId', user.id);
     
-    const organizationIds = memberships?.map(m => m.organizationId) || [];
+    const workspaceIds = memberships?.map(m => m.workspaceId) || [];
 
-    // 2. Fetch tasks for the user's organizations with project details
+    if (workspaceIds.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    // 2. Get project IDs in those workspaces
+    const { data: projects } = await supabase
+      .from('Project')
+      .select('id')
+      .in('workspaceId', workspaceIds);
+
+    const projectIds = projects?.map(p => p.id) || [];
+
+    if (projectIds.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    // 3. Fetch tasks for those projects
     const { data: tasks, error: fetchError } = await supabase
       .from('Task')
       .select('*, project:Project!inner(*)')
-      .in('organizationId', organizationIds)
+      .in('projectId', projectIds)
       .order('updatedAt', { ascending: false });
 
     if (fetchError) throw fetchError;

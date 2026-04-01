@@ -10,14 +10,15 @@ export async function GET() {
   }
 
   try {
-    // 1. Get organization IDs where the user is a member
+    // 1. Get workspace IDs where user is a member
     const { data: memberships } = await supabase
-      .from('Membership')
-      .select('organizationId')
+      .from('WorkspaceMember')
+      .select('workspaceId')
       .eq('userId', user.id);
-    const organizationIds = memberships?.map(m => m.organizationId) || [];
+    
+    const workspaceIds = memberships?.map(m => m.workspaceId) || [];
 
-    if (organizationIds.length === 0) {
+    if (workspaceIds.length === 0) {
       return NextResponse.json({
         totalTasks: 0,
         completedTasks: 0,
@@ -29,7 +30,27 @@ export async function GET() {
       });
     }
 
-    // 2. Aggregate stats
+    // 2. Get project IDs in those workspaces
+    const { data: projects } = await supabase
+      .from('Project')
+      .select('id')
+      .in('workspaceId', workspaceIds);
+
+    const projectIds = projects?.map(p => p.id) || [];
+
+    if (projectIds.length === 0) {
+      return NextResponse.json({
+        totalTasks: 0,
+        completedTasks: 0,
+        inProgressTasks: 0,
+        totalProjects: 0,
+        projectProgress: [],
+        upcomingDeadlines: [],
+        recentActivity: []
+      });
+    }
+
+    // 3. Aggregate stats
     const [
       { count: totalTasks },
       { count: completedTasks },
@@ -39,13 +60,13 @@ export async function GET() {
       { data: projectsWithStats },
       { data: upcomingDeadlines }
     ] = await Promise.all([
-      supabase.from('Task').select('id', { count: 'exact', head: true }).in('organizationId', organizationIds),
-      supabase.from('Task').select('id', { count: 'exact', head: true }).eq('status', 'DONE').in('organizationId', organizationIds),
-      supabase.from('Task').select('id', { count: 'exact', head: true }).eq('status', 'IN_PROGRESS').in('organizationId', organizationIds),
-      supabase.from('Project').select('id', { count: 'exact', head: true }).in('organizationId', organizationIds),
-      supabase.from('Task').select('*, project:Project!inner(*)').in('organizationId', organizationIds).order('updatedAt', { ascending: false }).limit(5),
-      supabase.from('Project').select('*, tasks:Task(status)').in('organizationId', organizationIds),
-      supabase.from('Task').select('*, project:Project!inner(*)').in('organizationId', organizationIds).neq('status', 'DONE').not('dueDate', 'is', null).lte('dueDate', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()).order('dueDate', { ascending: true }).limit(5)
+      supabase.from('Task').select('id', { count: 'exact', head: true }).in('projectId', projectIds),
+      supabase.from('Task').select('id', { count: 'exact', head: true }).eq('status', 'DONE').in('projectId', projectIds),
+      supabase.from('Task').select('id', { count: 'exact', head: true }).eq('status', 'IN_PROGRESS').in('projectId', projectIds),
+      supabase.from('Project').select('id', { count: 'exact', head: true }).in('id', projectIds),
+      supabase.from('Task').select('*, project:Project!inner(*)').in('projectId', projectIds).order('updatedAt', { ascending: false }).limit(5),
+      supabase.from('Project').select('*, tasks:Task(status)').in('id', projectIds),
+      supabase.from('Task').select('*, project:Project!inner(*)').in('projectId', projectIds).neq('status', 'DONE').not('dueDate', 'is', null).lte('dueDate', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()).order('dueDate', { ascending: true }).limit(5)
     ]);
 
     const projectProgress = (projectsWithStats as Record<string, unknown>[] || []).map(p => {

@@ -22,10 +22,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found. They must register first." }, { status: 404 });
     }
 
-    // 2. Get all workspaces that have projects
+    // 2. Only workspace admins can grant access
+    const { data: adminWorkspaces } = await supabase
+      .from('WorkspaceMember')
+      .select('workspaceId')
+      .eq('userId', user.id)
+      .eq('role', 'ADMIN');
+
+    if (!adminWorkspaces || adminWorkspaces.length === 0) {
+      return NextResponse.json({ error: "Only workspace admins can grant access" }, { status: 403 });
+    }
+
+    // 3. Get projects only in admin's workspaces
     const { data: projects, error: projError } = await supabase
       .from('Project')
-      .select('workspaceId');
+      .select('workspaceId')
+      .in('workspaceId', adminWorkspaces.map(w => w.workspaceId));
 
     if (projError) throw projError;
 
