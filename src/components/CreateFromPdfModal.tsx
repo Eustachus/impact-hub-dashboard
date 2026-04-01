@@ -7,6 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FileText, Loader2, CheckCircle2, ChevronRight, Sparkles, Clipboard } from "lucide-react";
 import { useRouter } from "next/navigation";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+
+// Set worker source for pdf.js
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 interface ParsedTask {
   title: string;
@@ -30,8 +34,6 @@ interface CreateFromPdfModalProps {
 }
 
 async function extractPdfText(file: File): Promise<{ text: string; pages: number }> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const pdfjsLib: any = await loadPdfjs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const pages = pdf.numPages;
@@ -49,33 +51,6 @@ async function extractPdfText(file: File): Promise<{ text: string; pages: number
   }
 
   return { text: fullText, pages };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let pdfjsLibCache: any = null;
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function loadPdfjs(): Promise<any> {
-  if (pdfjsLibCache) return pdfjsLibCache;
-
-  await new Promise<void>((resolve) => {
-    const script = document.createElement("script");
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs";
-    script.type = "module";
-    document.head.appendChild(script);
-
-    const check = () => {
-      if ((window as unknown as Record<string, unknown>).pdfjsLib) {
-        resolve();
-      } else {
-        setTimeout(check, 100);
-      }
-    };
-    script.onload = () => setTimeout(check, 300);
-  });
-
-  pdfjsLibCache = (window as unknown as Record<string, unknown>).pdfjsLib;
-  return pdfjsLibCache;
 }
 
 function parseText(text: string, fileName: string): Preview {
