@@ -78,14 +78,14 @@ export function Sidebar() {
 
       <div className="border-t p-4">
         <Link
-          href="/dashboard/help"
+          href="/dashboard/settings"
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
             !sidebarOpen && "justify-center px-0"
           )}
         >
           <Inbox className="h-4 w-4 flex-shrink-0" />
-          {sidebarOpen && <span>Help</span>}
+          {sidebarOpen && <span>Settings</span>}
         </Link>
       </div>
     </aside>
