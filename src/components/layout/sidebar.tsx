@@ -21,7 +21,7 @@ const navItems = [
   { name: "Files", href: "/dashboard/files", icon: FileIcon },
 ];
 
-export function Sidebar() {
+export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar } = useUIStore();
 
@@ -29,7 +29,8 @@ export function Sidebar() {
     <aside
       className={cn(
         "relative flex flex-col border-r bg-card/70 backdrop-blur-xl transition-all duration-300",
-        sidebarOpen ? "w-64" : "w-16"
+        sidebarOpen ? "w-64" : "w-16",
+        className
       )}
     >
       <div className="flex h-14 items-center justify-between border-b px-4">

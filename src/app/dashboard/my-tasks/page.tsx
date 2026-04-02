@@ -5,15 +5,11 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  CheckCircle2, 
-  Clock, 
-  MoreVertical,
-  Plus
-} from "lucide-react";
+import { CheckCircle2, Clock, MoreVertical, Plus, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { CreateTaskModal } from "@/components/CreateTaskModal";
 import { TaskDetailModal } from "@/components/TaskDetailModal";
+import { exportTasksToCSV } from "@/lib/csv-export";
 
 export default function MyTasksPage() {
   const [tasks, setTasks] = useState<unknown[]>([]);
@@ -44,9 +40,14 @@ export default function MyTasksPage() {
           <h1 className="text-3xl font-bold tracking-tight">Mes Tâches</h1>
           <p className="text-muted-foreground">Toutes les tâches qui vous sont assignées à travers vos projets.</p>
         </div>
-        <Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
-          <Plus className="h-4 w-4" /> Nouvelle Tâche
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => exportTasksToCSV(tasks as Record<string, unknown>[], "mes-taches")}>
+            <Download className="h-4 w-4 mr-2" /> Export CSV
+          </Button>
+          <Button className="gap-2" onClick={() => setIsCreateOpen(true)}>
+            <Plus className="h-4 w-4" /> Nouvelle Tâche
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4">

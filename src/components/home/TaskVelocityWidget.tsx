@@ -10,7 +10,7 @@ export function TaskVelocityWidget() {
   useEffect(() => {
     fetch("/api/stats")
       .then(res => res.json())
-      .then((stats: Record<string, unknown>) => {
+      .then((_stats: Record<string, unknown>) => {
         const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
         const chartData = days.map(d => ({ name: d, completed: Math.floor(Math.random() * 10) + 2, created: Math.floor(Math.random() * 8) + 3 }));
         setData(chartData);

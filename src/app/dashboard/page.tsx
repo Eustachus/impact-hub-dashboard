@@ -213,7 +213,7 @@ export default function DashboardPage() {
             <Badge variant="outline" className="text-[10px] font-black uppercase tracking-[0.2em] border-primary/30 text-primary bg-primary/5 px-2 py-0.5 mb-2">
               Impact Dashboard
             </Badge>
-            <h1 className="text-5xl font-black tracking-tighter text-foreground drop-shadow-sm">
+            <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-foreground drop-shadow-sm">
               {new Date().getHours() < 12 ? "Bonjour," : "Bonsoir,"} <span className="text-primary">{firstName}</span>.
             </h1>
             <p className="text-muted-foreground font-medium text-lg pt-1">

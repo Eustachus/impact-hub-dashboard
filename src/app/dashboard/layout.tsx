@@ -16,7 +16,7 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      <Sidebar />
+      <Sidebar className="hidden lg:flex" />
       
       <div className="flex-1 flex flex-col overflow-hidden w-full">
         <Topbar />

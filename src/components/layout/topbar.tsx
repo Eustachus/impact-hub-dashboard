@@ -4,6 +4,7 @@ import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Search, Plus, Sun, Moon, LogOut, User as UserIcon, Settings } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
+import { MobileMenu } from "@/components/MobileMenu";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,7 +61,8 @@ export function Topbar() {
   }, [setTheme, theme]);
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b bg-card/70 backdrop-blur-xl px-6 lg:h-[60px] sticky top-0 z-50">
+    <header className="flex h-14 items-center gap-4 border-b bg-card/70 backdrop-blur-xl px-4 lg:px-6 lg:h-[60px] sticky top-0 z-50">
+      <MobileMenu />
       <div className="w-full flex-1">
         <form onSubmit={(e) => e.preventDefault()}>
           <div className="relative">
