@@ -44,6 +44,7 @@ import { ImminentDeadlinesWidget } from "@/components/home/ImminentDeadlinesWidg
 import { TaskDetailModal } from "@/components/TaskDetailModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DashboardSkeleton } from "@/components/Skeleton";
 import { createClient } from "@/lib/supabase/client";
 
 // Lazy load heavy recharts-based widgets
