@@ -29,6 +29,7 @@ export function ProjectOverview({ project, tasks = [], onUpdate, onTaskClick }: 
   const [isEditingBrief, setIsEditingBrief] = useState(false);
   const [brief, setBrief] = useState(project.brief || "");
   const [isAddingResource, setIsAddingResource] = useState(false);
+  const [resources, setResources] = useState<any[]>(project.resources || []);
 
   const handleSaveBrief = () => {
     onUpdate({ brief });
@@ -107,7 +108,7 @@ export function ProjectOverview({ project, tasks = [], onUpdate, onTaskClick }: 
              </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(project.resources || []).length > 0 ? project.resources.map((res: any) => (
+            {(resources || []).length > 0 ? resources.map((res: any) => (
               <a 
                 key={res.id} 
                 href={res.url} 
@@ -150,16 +151,16 @@ export function ProjectOverview({ project, tasks = [], onUpdate, onTaskClick }: 
                  url: formData.get("url") as string,
                  type: "LINK"
                };
-               fetch(`/api/projects/${project.id}/resources`, {
-                 method: "POST",
-                 headers: { "Content-Type": "application/json" },
-                 body: JSON.stringify(data)
-               }).then(res => {
-                 if (res.ok) {
-                   setIsAddingResource(false);
-                   window.location.reload(); // Quick refresh
-                 }
-               });
+                fetch(`/api/projects/${project.id}/resources`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(data)
+                }).then(res => {
+                  if (res.ok) {
+                    setIsAddingResource(false);
+                    setResources(prev => [data, ...prev]);
+                  }
+                });
              }}>
                <CardContent className="space-y-4 pt-6">
                  <div className="space-y-2">

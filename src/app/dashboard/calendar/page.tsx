@@ -18,17 +18,14 @@ export default function CalendarPage() {
   const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(startDate, i));
 
   useEffect(() => {
-    fetch(`/api/tasks?date=${format(currentDate, 'yyyy-MM-dd')}`)
+    fetch("/api/tasks")
       .then(res => res.json())
       .then(data => {
         setTasks(Array.isArray(data) ? data : []);
       })
-      .catch(err => {
-        console.error(err);
-        setTasks([]);
-      })
+      .catch(() => { setTasks([]); })
       .finally(() => setLoading(false));
-  }, [currentDate]);
+  }, []);
 
   if (loading) return <div className="p-8">Chargement du calendrier...</div>;
 
@@ -60,7 +57,7 @@ export default function CalendarPage() {
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
-          <Button>
+          <Button onClick={() => setCurrentDate(new Date())}>
             <CalendarIcon className="mr-2 h-4 w-4" /> Today
           </Button>
         </div>
