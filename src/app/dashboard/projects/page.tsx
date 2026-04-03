@@ -6,7 +6,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { CopyPlus, MoreHorizontal, LayoutGrid, List as ListIcon, FolderIcon, CheckCircle, FileText } from "lucide-react";
+import { CopyPlus, MoreHorizontal, LayoutGrid, List as ListIcon, FolderIcon, CheckCircle, FileText, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { CreateFromPdfModal } from "@/components/CreateFromPdfModal";
+import { AIGenerateModal } from "@/components/AIGenerateModal";
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -25,6 +26,40 @@ export default function ProjectsPage() {
   const [view, setView] = useState<"grid" | "list">("grid");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const handleAIGenerated = async (plan: Record<string, unknown>) => {
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: plan.name, description: plan.description }),
+      });
+      const project = await res.json();
+      if (!res.ok) throw new Error(project.error);
+
+      const sections = plan.sections as Record<string, unknown>[];
+      for (const section of sections) {
+        const secRes = await fetch(`/api/projects/${project.id}/sections`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: section.name, order: sections.indexOf(section) }),
+        });
+        const sec = await secRes.json();
+        if (!secRes.ok) continue;
+
+        const tasks = section.tasks as Record<string, unknown>[];
+        for (const task of (tasks || [])) {
+          await fetch(`/api/projects/${project.id}/tasks`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: task.title, priority: task.priority, description: task.description, status: "TODO", sectionId: sec.id }),
+          });
+        }
+      }
+
+      fetchProjects();
+    } catch { /* toast will show */ }
+  };
   const [projects, setProjects] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   const [newProject, setNewProject] = useState({ name: "", description: "", color: "#3b82f6" });
@@ -104,6 +139,9 @@ export default function ProjectsPage() {
             </Button>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" className="border-amber-500/30 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20" onClick={() => setIsAIModalOpen(true)}>
+              <Sparkles className="mr-2 h-4 w-4" /> AI Generate
+            </Button>
             <Button variant="outline" onClick={() => setIsPdfModalOpen(true)}>
               <FileText className="mr-2 h-4 w-4" /> Import PDF
             </Button>
@@ -237,6 +275,11 @@ export default function ProjectsPage() {
       <CreateFromPdfModal
         isOpen={isPdfModalOpen}
         onClose={() => setIsPdfModalOpen(false)}
+      />
+      <AIGenerateModal
+        isOpen={isAIModalOpen}
+        onClose={() => setIsAIModalOpen(false)}
+        onGenerated={handleAIGenerated}
       />
     </div>
   );
